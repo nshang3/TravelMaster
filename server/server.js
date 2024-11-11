@@ -1,11 +1,25 @@
+const { connectToMongoDB } = require("./connection.js")
+
+
 const express = require('express');
 const {check, param, query, validationResult} = require('express-validator')
 const app = express();
 const port = 3000;
 
 const router = express.Router()
+let db
 
+connectToMongoDB().then( (database) => {
+    db = database
 
+    app.use('/api', router)
+
+    app.listen(port, () => {
+    console.log(`Listening on port: ${port}`)
+    })
+}).catch( (err) => {
+    console.error("Failed to connect to MongoDB. Server not started:", err)
+})
 
 const csv = require('csv-parser')
 const fs = require('fs')
@@ -49,20 +63,20 @@ const handleValidationErrors = (req, res, next) => {
 const getDestinations = (req, res) => {
 
     const {
-        allCountries,
+        // allCountries,
         search,
         search_name = "",
         search_region = "",
         search_country = ""
     } = req.query;
     
-    const n = req.query.n || 0
+
         
 
-        if(allCountries){
-            let resultC = [...new Set(destinations.map(dest => dest.Country))]
-            return res.send(resultC)
-        }
+        // if(allCountries){
+        //     let resultC = [...new Set(destinations.map(dest => dest.Country))]
+        //     return res.send(resultC)
+        // }
         if(search){
             let filteredIndices = destinations.reduce((acc, dest, index) => {
             //console.log("Destination Value:", JSON.stringify(dest["Destination"]), "Search Value:", JSON.stringify(search_name.toLowerCase()));
@@ -79,11 +93,6 @@ const getDestinations = (req, res) => {
             return acc;
             }, []);
 
-
-            if (n){
-                filteredIndices = filteredIndices.slice(0,n)
-            }
-
             if (filteredIndices.length == 0) {
                 // res.status(404).send(`Destinations from provided query not found`)
                 return res.status(404).json({ error: 'Destinations from provided query not found' })
@@ -92,7 +101,9 @@ const getDestinations = (req, res) => {
                 return res.send(filteredIndices)
             }
         }
-        return res.send(destinations)
+        else{
+            return res.send(destinations)
+        }
 }
 
 const getDestinationsFromID = (req, res) => {
@@ -132,40 +143,49 @@ router.route('/open/destinations')//do for countries a query parameter i.e. ?all
     )   
 
 router.route('/open/destinations/:dest_id')
-.get( 
-[
-    param('dest_id').isInt().toInt(), 
-    query('latlong').optional().isBoolean().toBoolean(),
-    handleValidationErrors
-],
-getDestinationsFromID 
-)
+    .get( 
+    [
+        param('dest_id').isInt().toInt(), 
+        query('latlong').optional().isBoolean().toBoolean(),
+        handleValidationErrors
+    ],
+    getDestinationsFromID 
+    )
 
 
 
 
-const getList = (req, res) => {
-    res.send(customLists)
+const getList = async (req, res) => {
+    let collection = await db.collection("custom_lists")
+    let results = await collection.find({}).toArray()
+    res.send(results).status(200)
 }
+const postList = async (req, res) => {
+    try{
+        let newDocument = {
+            listName: req.body.listName,
+            destIDs: req.body.destIDs,
+            desc: req.body.desc,
+            visibility: req.body.visibility
+        }
 
-const postList = (req, res) => {
-    const newList = req.body
-                
-    if (customLists.length == 0 || !customLists.some(list => list.listName == newList.listName)){
-        customLists.push(req.body)
-        res.send(newList)
+        let collection = await db.collection("custom_lists")
+        //console.log("Im here ", collection)
+        let result = await collection.insertOne(newDocument)
+        res.send(result).status(204)
+
     }
-    else{
-        //res.status(400).send("List name already exists")
+    catch (error) {
         return res.status(400).json({ error: 'List name already exists' })
     }
+
 }
 
 router.route('/secure/destinations/lists')
-    .get( (req, res) => {
+    .get(
         // authenticate
         getList
-    })
+        )
     .post(
         // authenticate, 
         [
@@ -177,21 +197,39 @@ router.route('/secure/destinations/lists')
     )
 
 
-const getListFromName = (req, res) => {
-    const found = customLists.find(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
+const getListFromName = async (req, res) => {
+    
+    let collection = await db.collection("custom_lists")
+    let query ={listName: req.params.listName}
+    let result = await collection.findOne(query)
 
-        if (!found){
-            return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
-            //return res.status(404).send(`Destination ${req.params.listName} was not found`);
-        }
+    if (!result) {
+        return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
+    }
 
-        if (req.query.ids){
-            res.send(found.destIDs)
-        }
-        else{
-            const list = found.destIDs.map(index => destinations[index])
-            res.send(list)
-        }
+    if (req.query.ids){
+        res.send(result.destIDs).status(200)
+    }
+    else{
+        const list = result.destIDs.map(index => destinations[index])
+        res.send(list)
+    }
+
+    
+    // const found = customLists.find(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
+
+    //     if (!found){
+    //         return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
+    //         //return res.status(404).send(`Destination ${req.params.listName} was not found`);
+    //     }
+
+    //     if (req.query.ids){
+    //         res.send(found.destIDs)
+    //     }
+    //     else{
+    //         const list = found.destIDs.map(index => destinations[index])
+    //         res.send(list)
+    //     }
 }
 const putDestinationsInList = (req, res) => {
     const found = customLists.find(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
@@ -248,14 +286,3 @@ router.route('/secure/destinations/lists/:listName')
 // const authenticate = (req, res) => {
     
 // }
-
-
-
-
-
-
-app.use('/api', router)
-
-app.listen(port, () => {
-    console.log(`Listening on port: ${port}`)
-})
