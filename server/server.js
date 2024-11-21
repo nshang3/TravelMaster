@@ -1,4 +1,5 @@
 const { connectToMongoDB } = require("./connection.js")
+const { ObjectId } = require("mongodb")
 
 
 const express = require('express');
@@ -166,7 +167,8 @@ const postList = async (req, res) => {
             listName: req.body.listName,
             destIDs: req.body.destIDs,
             desc: req.body.desc,
-            visibility: req.body.visibility
+            visibility: req.body.visibility,
+            date: req.body.date
         }
 
         let collection = await db.collection("custom_lists")
@@ -215,46 +217,50 @@ const getListFromName = async (req, res) => {
         res.send(list)
     }
 
+}
+const editList = async (req, res) => {
+    let collection = await db.collection("custom_lists")
+    let query = {listName: req.params.listName}
+
+    const fieldsToUpdate = {}
+    if (req.body.listName !== undefined) fieldsToUpdate.listName = req.body.listName
+    if (req.body.destIDs !== undefined) fieldsToUpdate.destIDs = req.body.destIDs
+    if (req.body.desc !== undefined) fieldsToUpdate.desc = req.body.desc
+    if (req.body.visibility !== undefined) fieldsToUpdate.visibility = req.body.visibility
+    if (req.body.date !== undefined) fieldsToUpdate.date = req.body.date
     
-    // const found = customLists.find(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
+    const put = {$set: fieldsToUpdate}
 
-    //     if (!found){
-    //         return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
-    //         //return res.status(404).send(`Destination ${req.params.listName} was not found`);
-    //     }
+    try{
+        let result = await collection.updateOne(query, put)
 
-    //     if (req.query.ids){
-    //         res.send(found.destIDs)
-    //     }
-    //     else{
-    //         const list = found.destIDs.map(index => destinations[index])
-    //         res.send(list)
-    //     }
-}
-const putDestinationsInList = (req, res) => {
-    const found = customLists.find(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
-
-    if (!found){
-        return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
-        //return res.status(404).send(`Destination ${req.params.listName} was not found`);
-    }
-
-    const newIDs = req.body.destIDs
-    found.destIDs = newIDs
-    res.send(found)
-}
-const deleteList = (req, res) => {
-    (req, res) => {
-        const index = customLists.findIndex(list => list.listName.trim().toLowerCase() === req.params.listName.trim().toLowerCase())
-
-        if (index === -1){
+        if (result.matchedCount == 0) {
             return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
-            //return res.status(404).send(`Destination ${req.params.listName} was not found`);
         }
 
-        customLists.splice(index, 1)
-        res.send(customLists)
+        res.send(result).status(200)
     }
+    catch (error) {
+        res.status(500).json({error: "An error occured while updating the list", details: error.message})
+    }
+}
+const deleteList = async (req, res) => {
+    try{
+        const query = {listName: req.params.listName}
+        const collection = await db.collection("custom_lists")
+
+        let result = await collection.deleteOne(query)
+
+        if (result.deletedCount == 0) {
+            return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
+        }
+
+        res.send(result).status(200)
+    }
+    catch (error) {
+        res.status(500).json({error: "An error occured while updating the list", detalis: error.message})
+    }
+
 }
 router.route('/secure/destinations/lists/:listName')
     .get(
@@ -272,7 +278,7 @@ router.route('/secure/destinations/lists/:listName')
             param('listName').isString().trim().withMessage("Provide a proper name"),
             handleValidationErrors
         ],
-        putDestinationsInList
+        editList
     )
     .delete(
         //authenticate
@@ -281,6 +287,72 @@ router.route('/secure/destinations/lists/:listName')
             handleValidationErrors
         ],
         deleteList
+    )
+
+
+const getReviewsFromName = async (req, res) => {
+    let collection = await db.collection("reviews")
+    let query ={listName: req.params.listName}
+    let result = await collection.find(query).toArray()
+
+    if (result.length==0) {
+        return res.status(404).json({ error: `Destination ${req.params.listName} and its reviews not found` })
+    }
+    else{
+        res.send(result)
+    }
+}
+const postReviewFromName = async (req, res) => {
+
+    try{
+        let newDocument = {
+            listName: req.params.listName,
+            rating: req.body.rating,
+            reviewDesc: req.body.reviewDesc,
+            visibility: req.body.visibility,
+        }
+
+        let collection = await db.collection("reviews")
+        let result = await collection.insertOne(newDocument)
+        res.send(result).status(204)
+
+    }
+    catch (error) {
+        return res.status(400).json({ error: 'Could not add review' })
+    }
+}
+const deleteReview = async (req, res) => {
+    try{
+        const query = {_id: new ObjectId(req.query.id)}
+        const collection = await db.collection("reviews")
+
+        let result = await collection.deleteOne(query)
+
+        if (result.deletedCount == 0) {
+            return res.status(404).json({ error: `Review ${req.params.listName} was not found` })
+        }
+
+        res.send(result).status(200)
+    }
+    catch (error) {
+        res.status(500).json({error: "An error occured while deleting a review", detalis: error.message})
+    }
+}
+
+router.route('/secure/destinations/lists/:listName/reviews')
+    .get(
+        [
+            param('listName').isString().trim().withMessage("Provide a proper name"),
+            handleValidationErrors
+        ],
+        getReviewsFromName
+    )
+    .post(
+        param('listName').isString().trim().withMessage("Provide a proper name"),
+        postReviewFromName
+    )
+    .delete(
+        deleteReview
     )
 
 // const authenticate = (req, res) => {
