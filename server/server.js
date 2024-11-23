@@ -1,5 +1,6 @@
 const { connectToMongoDB } = require("./connection.js")
 const { ObjectId } = require("mongodb")
+const authRouter = require("./auth.js")
 
 
 const express = require('express');
@@ -12,9 +13,8 @@ let db
 
 connectToMongoDB().then( (database) => {
     db = database
-
     app.use('/api', router)
-
+    app.use('/auth', authRouter(db))
     app.listen(port, () => {
     console.log(`Listening on port: ${port}`)
     })
