@@ -1,11 +1,16 @@
-const express = require('express');
+const express = require('express')
+const dotenv = require('dotenv')
 const argon2 = require('argon2')
-const jwt = require('jsonwebtoken')
+var jwt = require('jsonwebtoken')
 var passport = require('passport')
 var LocalStrategy = require('passport-local')
 const {db} = require('./connection.js')
 const router = express.Router()
 router.use(express.json())
+
+dotenv.config({ path: './data/config.env' })
+var secret = process.env.JWT_SECRET
+
 
 module.exports = (db) => {
     router.post('/user', async (req, res) => {
@@ -44,7 +49,15 @@ module.exports = (db) => {
                 return res.status(401).json({ error: info.message })
               }
               // For JWT-based approach, sign a token here
-              res.status(200).json({ message: 'Login successful', user })
+              
+              var token = jwt.sign(
+                { id: user._id, email: user.email },
+                secret,
+                { expiresIn: '1h' }
+              ) 
+              
+              
+              res.status(200).json({ message: 'Login successful', token })
         })(req, res, next)
     })
 
@@ -71,9 +84,10 @@ module.exports = (db) => {
             }
             catch (err) {
                 return cb(err)
-            }
+        }
 
     }))
+
 
     router.use(passport.initialize())
 

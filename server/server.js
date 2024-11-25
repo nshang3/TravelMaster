@@ -1,15 +1,19 @@
 const { connectToMongoDB } = require("./connection.js")
 const { ObjectId } = require("mongodb")
 const authRouter = require("./auth.js")
-
-
+const dotenv = require('dotenv')
+var jwt = require('jsonwebtoken')
 const express = require('express');
 const {check, param, query, validationResult} = require('express-validator')
 const app = express();
 const port = 3000;
 
+
+
 const router = express.Router()
 let db
+dotenv.config({ path: './data/config.env' })
+var secret = process.env.JWT_SECRET
 
 connectToMongoDB().then( (database) => {
     db = database
@@ -30,6 +34,23 @@ router.use(express.json())
 
 const destinations = []
 const customLists = []
+
+const authenticate = (req, res, next) => {
+    var token = req.headers.authorization.split(' ')[1]
+  
+    if (!token) {
+        return res.status(403).json({ error: 'Access denied. No token provided.' });
+    }
+  
+    try {
+        var decoded = jwt.verify(token, secret);
+        req.user = decoded
+        next()
+    } catch (e) {
+        return res.status(401).json({ error: 'Invalid or expired token.' })
+    }
+
+}
 
 fs.createReadStream('./data/europe-destinations.csv')
     .pipe(csv())//will format the csv into rows where each row has key value pairs. 
@@ -185,11 +206,11 @@ const postList = async (req, res) => {
 
 router.route('/secure/destinations/lists')
     .get(
-        // authenticate
+        authenticate,
         getList
         )
     .post(
-        // authenticate, 
+        authenticate, 
         [
             check('listName').notEmpty().withMessage("List name is required"),
             check('destIDs').isArray().withMessage("destIDs must be an array"),
@@ -264,7 +285,7 @@ const deleteList = async (req, res) => {
 }
 router.route('/secure/destinations/lists/:listName')
     .get(
-        //authenticate
+        authenticate,
         [
             query('ids').optional().isBoolean().toBoolean(),
             param('listName').isString().trim().withMessage("Provide a proper name"),
@@ -273,7 +294,7 @@ router.route('/secure/destinations/lists/:listName')
         getListFromName
     )
     .put(
-        //authenticate
+        authenticate,
         [
             param('listName').isString().trim().withMessage("Provide a proper name"),
             handleValidationErrors
@@ -281,7 +302,7 @@ router.route('/secure/destinations/lists/:listName')
         editList
     )
     .delete(
-        //authenticate
+        authenticate,
         [
             param('listName').isString().trim().withMessage("Provide a proper name"),
             handleValidationErrors
@@ -341,6 +362,7 @@ const deleteReview = async (req, res) => {
 
 router.route('/secure/destinations/lists/:listName/reviews')
     .get(
+        authenticate,
         [
             param('listName').isString().trim().withMessage("Provide a proper name"),
             handleValidationErrors
@@ -348,13 +370,13 @@ router.route('/secure/destinations/lists/:listName/reviews')
         getReviewsFromName
     )
     .post(
+        authenticate,
         param('listName').isString().trim().withMessage("Provide a proper name"),
         postReviewFromName
     )
     .delete(
+        authenticate,
         deleteReview
     )
 
-// const authenticate = (req, res) => {
-    
-// }
+
