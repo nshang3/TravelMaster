@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom"
-import { useState, useEffect} from 'react'
+import { useState, useEffect, useRef} from 'react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
 import Header from "./components/Header"
 import LoginPage from "./components/LoginPage"
-
+import Destinations from "./components/Destinations"
+import Markers from "./components/Markers"
 
 function Nav() {
   const navigate = useNavigate(); // Initialize navigation
@@ -22,8 +23,71 @@ function Nav() {
 }
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isSearch, setIsSearch] = useState(false)
+  const [searchIDs, setSearchIDs] = useState([])
+  const [destinations, setDestinations] = useState([])
+  const [coords, setCoords] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const searchInputs = useRef(Array(3).fill(null))
+  const [destsPerPage, setDestsPerPage] = useState(5)
 
+  useEffect ( () => {
+    console.log("useEffect for fetching ids called ")
+    async function getSearchIDs(){
+
+      const dest = searchInputs.current[0]?.value || '';
+      const region = searchInputs.current[1]?.value || '';
+      const country = searchInputs.current[2]?.value || '';
+
+      //console.log("The destination is ",dest)
+      const response = await fetch(`/api/open/destinations/?search=true&search_name=${dest}&search_region=${region}&search_country=${country}`)
+      
+      if (!response.ok) {
+        const message = `An error occurred: ${response.statusText}`;
+        console.log(message);
+        return;
+      }
+  
+      const searchIds = await response.json()
+      setSearchIDs(searchIds)
+      console.log("The search ids are ", searchIds)
+      setIsSearch(false)
+    }
+    getSearchIDs()
+    return
+  },[isSearch])
+
+  useEffect ( () => {
+    console.log("useEffect for fetching searches called ")
+    async function getDestinations() {
+      const destinationResponse = searchIDs.map( (id) =>
+        fetch(`/api/open/destinations/${id}`).then( (res) => res.json())
+      )
+      const coordinateResponse = searchIDs.map( (id) =>
+        fetch(`/api/open/destinations/${id}?latlong=true`).then( (res) => res.json())
+      )
+      const dests = await Promise.all(destinationResponse)
+      const coords = await Promise.all(coordinateResponse)
+      
+      setDestinations(dests)
+      setCoords(coords)
+      // console.log("The destinations are", dests)
+      // console.log("The destinations are", coords)
+    }
+    getDestinations()
+    return
+  },[searchIDs])
+
+  const prevPage = () =>{
+    if (currentPage > 1){
+      setCurrentPage(currentPage - 1)
+    }
+ 
+  }
+  const nextPage = () =>{
+    if (currentPage * destsPerPage < destinations.length )
+    setCurrentPage(currentPage + 1)
+  }
   return (
 
     <Router>
@@ -37,14 +101,10 @@ function App() {
                 <div className="search-section">
                   <h2>Search For Destinations</h2>
                   <div className="search-controls">
-                    <input id="pattern" type="text" placeholder="Search" maxLength="30" />
-                    <select id="field">
-                      <option></option>
-                      <option value="Destination">Destination</option>
-                      <option value="Region">Region</option>
-                      <option value="Country">Country</option>
-                    </select>
-                    <button id="get-destinations">Search</button>
+                    <input ref={(el) => (searchInputs.current[0] = el)} type="text" placeholder="Search Destination" maxLength="30" className="searchInput" />
+                    <input ref={(el) => (searchInputs.current[1] = el)} type="text" placeholder="Search Region" maxLength="30" className="searchInput"/>
+                    <input ref={(el) => (searchInputs.current[2] = el)} type="text" placeholder="Search Country" maxLength="30" className="searchInput"/>
+                    <button id="get-destinations" onClick={() => {setIsSearch(true); }}>Search</button>
                   </div>
 
                   <div id="map-section">
@@ -58,12 +118,12 @@ function App() {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       />
-                      <Marker position={[51.505, -0.09]}></Marker>
+                      <Markers allCoords={coords} currentPage={currentPage} destPerPage={destsPerPage}/>
                     </MapContainer>
                   </div>
 
                   <label htmlFor="occur">Destinations/Page</label>
-                  <select id="occur">
+                  <select id="occur" onChange={(e) => setDestsPerPage(Number(e.target.value))}>
                     <option></option>
                     <option value="5">5</option>
                     <option value="10">10</option>
@@ -74,15 +134,17 @@ function App() {
                 <div id="display-countries"></div>
 
                 <div className="page-actions">
-                  <button id="prev">Previous</button>
-                  <button id="next">Next</button>
+                  <button id="prev" onClick={prevPage} disabled={currentPage === 1}>Previous</button>
+                  <button id="next" onClick={nextPage} disabled={currentPage * destsPerPage >= destinations.length}>Next</button>
                 </div>
 
                 <div>
-                  <h3 id="pageNumbers">0 of 0</h3>
+                  <h3 id="pageNumbers">{currentPage} of {Math.ceil(destinations.length / destsPerPage)}</h3>
                 </div>
 
-                <div className="grid-container"></div>
+                <div className="grid-container">
+                  <Destinations allDestinations={destinations} currentPage={currentPage} destPerPage={destsPerPage} />
+                </div>
               </div>
         </>}/>
       </Routes>

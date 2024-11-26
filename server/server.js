@@ -92,18 +92,15 @@ const getDestinations = (req, res) => {
         search_country = ""
     } = req.query;
     
-
-        
-
         // if(allCountries){
         //     let resultC = [...new Set(destinations.map(dest => dest.Country))]
         //     return res.send(resultC)
         // }
+        console.log(search_name)
+        console.log(search_region)
+        console.log(search_country)
         if(search){
             let filteredIndices = destinations.reduce((acc, dest, index) => {
-            //console.log("Destination Value:", JSON.stringify(dest["Destination"]), "Search Value:", JSON.stringify(search_name.toLowerCase()));
-            
-            
             if (
                 ( (dest["Destination"].toLowerCase().startsWith(search_name.toLowerCase())) || !search_name) &&
                 ( (dest["Region"].toLowerCase().startsWith(search_region.toLowerCase())) ||  !search_region) && 
@@ -156,9 +153,9 @@ router.route('/open/destinations')//do for countries a query parameter i.e. ?all
         [
             query('allCountries').optional().isBoolean().withMessage('allCountries must be a boolean value').toBoolean(), 
             query('search').optional().isBoolean().withMessage('search must be a boolean value').toBoolean(), 
-            query('search_name').optional().isString().trim().matches(/^[\p{L}\s]+$/u).withMessage('input must contain only letters and spaces'),
-            query('search_region').optional().isString().trim().matches(/^[\p{L}\s]+$/u).withMessage('input contain only letters and spaces'),
-            query('search_country').optional().isString().trim().matches(/^[\p{L}\s]+$/u).withMessage('input contain only letters and spaces'),
+            query('search_name').optional().isString().trim().matches(/^[\p{L}\s]*$/u).withMessage('input must contain only letters and spaces'),
+            query('search_region').optional().isString().trim().matches(/^[\p{L}\s]*$/u).withMessage('input contain only letters and spaces'),
+            query('search_country').optional().isString().trim().matches(/^[\p{L}\s]*$/u).withMessage('input contain only letters and spaces'),
             handleValidationErrors
         ],
         getDestinations

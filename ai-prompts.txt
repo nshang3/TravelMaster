@@ -1,1 +1,35 @@
 # Record all AI tools and prompts that you used to create substantial amounts of code.
+  useEffect ( () => {
+    console.log("useEffect for fetching searches called ")
+    async function getDestinations() {
+      const dests = []
+      const coords = []
+      for (let i = 0; i < searchIDs.length; i++) {
+        const response = await fetch(/api/open/destinations/${searchIDs[i]})
+        const cord_response = await fetch(/api/destinations/${searchIDs[i]}?latlong=${true})
+        
+        if (!response.ok) {
+          const message = An error occurred: ${response.statusText};
+          console.log(message);
+          return;
+        }
+        
+        if (!cord_response.ok) {
+          const message = An error occurred: ${response.statusText};
+          console.log(message);
+          return;
+        }
+        
+        const destination = await response.json()
+        const coord = await cord_response.json()
+        
+        dests.push(destination)
+        coords.push(coord)
+      }
+      setDestinations(dests)
+      setCoords(coords)
+      //console.log("The destinations are", destinations)
+    }
+    getDestinations()
+    return
+  },[searchIDs])//now i haave it so that it also calls another api for coordinates will this slow it down?

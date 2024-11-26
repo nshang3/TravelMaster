@@ -9,6 +9,7 @@ h1 {
 .logbtn{
   margin-top: 2%;
 }
+
 .header{
   height: 10%;
   background-color: #fdfd89;
@@ -100,7 +101,7 @@ h1 {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 40%;
+  margin-right: 1%;
 }
 
 .lb{
