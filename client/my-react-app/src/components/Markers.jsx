@@ -7,8 +7,8 @@ function Markers ({allCoords, currentPage, destPerPage}){
     const coordsArray = currentCoords.map(loca => [parseFloat(loca.latitude), parseFloat(loca.longitude)])
     return(
         <>
-        {coordsArray.map( (value) => 
-            <Marker position={value}></Marker>)}
+        {coordsArray.map( (value, index) => 
+            <Marker position={value} key={index}></Marker>)}
         </>
     )
 }

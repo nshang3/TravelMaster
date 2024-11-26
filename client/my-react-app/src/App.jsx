@@ -45,6 +45,7 @@ function App() {
       if (!response.ok) {
         const message = `An error occurred: ${response.statusText}`;
         console.log(message);
+        setIsSearch(false)
         return;
       }
   
@@ -71,6 +72,7 @@ function App() {
       
       setDestinations(dests)
       setCoords(coords)
+      setCurrentPage(1)
       // console.log("The destinations are", dests)
       // console.log("The destinations are", coords)
     }
