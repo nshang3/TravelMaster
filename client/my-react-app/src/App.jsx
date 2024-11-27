@@ -2,17 +2,16 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-route
 import { useState, useEffect, useRef} from 'react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import './App.css'
 import Header from "./components/Header"
 import LoginPage from "./components/LoginPage"
 import Destinations from "./components/Destinations"
 import Markers from "./components/Markers"
-
+import "./stylesheets/App.css"
 function Nav() {
   const navigate = useNavigate(); // Initialize navigation
 
   const handleLoginClick = () => {
-    navigate("/auth/login"); // Redirect to the login route
+    navigate("/login"); // Redirect to the login route
   }
 
   return (
@@ -30,7 +29,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1)
   const searchInputs = useRef(Array(3).fill(null))
   const [destsPerPage, setDestsPerPage] = useState(5)
-
+  const [isLoggedIn, setLoggedIn] = useState(false)
   useEffect ( () => {
     console.log("useEffect for fetching ids called ")
     async function getSearchIDs(){
@@ -94,7 +93,7 @@ function App() {
 
     <Router>
       <Routes>
-        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} />} />
         <Route path="/" element={
           <>
               <Header />
@@ -147,6 +146,33 @@ function App() {
                 <div className="grid-container">
                   <Destinations allDestinations={destinations} currentPage={currentPage} destPerPage={destsPerPage} />
                 </div>
+              
+                {isLoggedIn && (
+                  <div className="favorites-section">
+                    <h2>My Travel Lists</h2>
+                    <div className="list-controls">
+                      <input id="list-name" type="text" placeholder="Enter list name..." />
+                      <input id="destinations" type="text" placeholder="Enter destinations separated by commas" />
+                      <button id="create-list">Create List</button>
+                    </div>
+                    <div className="list-container">
+                      <ul id="custom-lists"></ul>
+                    </div>
+                    <div className="list-actions">
+                      <button id="load-list">Load List</button>
+                      <button id="delete-list">Delete List</button>
+                      <input id="searchCustom" type="text" placeholder="Search" />
+                      <select id="sort-option">
+                        <option></option>
+                        <option value="Destination">Name</option>
+                        <option value="Region">Region</option>
+                        <option value="Country">Country</option>
+                      </select>
+                      <button id="sort-customLists">Sort</button>
+                      <button id="get-countries">Get Countries</button>
+                    </div>
+                  </div>
+                )}
               </div>
         </>}/>
       </Routes>

@@ -1,11 +1,67 @@
-import React, { useState, useEffect } from "react";
-import Header from "./Header";
+import React, { useState, useEffect, useRef } from "react"
+import { useNavigate } from 'react-router-dom'
+import Header from "./Header"
 import '../stylesheets/LoginPage.css'
 
 
-function LoginPage() {
+function LoginPage({setLoggedIn}) {
     const [showCreateAccountPopup, setShowCreateAccountPopup] = useState(false)
+    const emailInput = useRef("")
+    const passInput = useRef("")
+    const [loginData, setLoginData] = useState({
+        email: "",
+        password: ""
+    })
 
+    const navigate = useNavigate()
+    const login = async () => {
+        const loginInfo = {...loginData}
+
+        if ( loginData.email !== ""){
+            try{
+
+
+                console.log("LOGIN FUNCTION useeffect called ")
+                console.log(loginInfo.email)
+                console.log(loginInfo.password)
+
+                let response
+                response = await fetch('/auth/login', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        },
+                    body: JSON.stringify(loginInfo)
+                })
+    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                
+                  const confirmation = await response.json()
+                  console.log("Confirmation:", confirmation)
+                  setLoggedIn(true)
+                  navigate('/')
+            }
+            catch (error) {
+                console.error('A problem occurred when logging in: ', error);
+            }
+        }
+    }
+
+    useEffect ( () => {
+        login()
+    }, [loginData])
+
+
+    const submitLogin = () => {
+
+        setLoginData(prev => ({
+            ...prev,
+            email: emailInput.current.value || '', 
+            password: passInput.current.value || ''
+          })) 
+    }
     return (
         <>
             <Header />
@@ -14,9 +70,9 @@ function LoginPage() {
                 <div className="login-card">
                     
                     <div className="login-controls">
-                        <input className="input" id="email" type="text" placeholder="Enter Email" maxLength="30" />
-                        <input className="input" id="password" type="text" placeholder="Enter Password" maxLength="30" />
-                        <button className="enter">Enter</button>
+                        <input className="input" ref={(el) => emailInput.current = el}type="text" placeholder="Enter Email" maxLength="30" />
+                        <input className="input" ref={(el) => passInput.current = el} type="text" placeholder="Enter Password" maxLength="30" />
+                        <button className="enter" onClick={() => submitLogin()}>Enter</button>
                         <button className="create-account-button" onClick={() => setShowCreateAccountPopup(true)}> Create Account </button>
                     </div>
                 </div>
