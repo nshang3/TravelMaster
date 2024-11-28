@@ -40,6 +40,8 @@ function LoginPage({setLoggedIn}) {
                 
                   const confirmation = await response.json()
                   console.log("Confirmation:", confirmation)
+
+                  localStorage.setItem("jwtToken", confirmation.token);
                   setLoggedIn(true)
                   navigate('/')
             }
@@ -61,6 +63,66 @@ function LoginPage({setLoggedIn}) {
             email: emailInput.current.value || '', 
             password: passInput.current.value || ''
           })) 
+    }
+
+    const [newAccount, setNewAccount] = useState({
+        nickname: "",
+        email: "",
+        password: "",
+        disabled: false
+    })
+
+    const createName = useRef("")
+    const createEmail = useRef("")
+    const createPass = useRef("")
+
+    const createAccount = async () => {
+        const accountInfo = {...newAccount}
+
+        if ( accountInfo.nickname !== ""){
+            try{
+
+
+                console.log("CREATE ACCOUNT FUNCTION useEffect called ")
+                console.log(accountInfo.email)
+                console.log(accountInfo.password)
+    
+                let response
+                response = await fetch('/auth/user', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        },
+                    body: JSON.stringify(accountInfo)
+                })
+    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const confirmation = await response.json()
+                console.log("Confirmation:", confirmation)
+                alert("Account created. Please verify your email.");
+
+            }
+            catch (error) {
+                console.error('A problem occurred when creating an account: ', error);
+            }
+        }
+    }
+
+
+    useEffect ( () => {
+        createAccount()
+    }, [newAccount])
+
+    const submitAccount = () => {
+        setNewAccount(prev => ({
+            ...prev,
+            nickname: createName.current.value || '',
+            email: createEmail.current.value || '', 
+            password: createPass.current.value || ''
+          }))
     }
     return (
         <>
@@ -84,13 +146,13 @@ function LoginPage({setLoggedIn}) {
 
                 <h2>Create Account</h2>
                 <div className="popup-input">
-                    <input className="input" id="createName" type="text" placeholder="Enter Name" maxLength="30"/>
-                    <input className="input" id="createEmail" type="text" placeholder="Enter Email" maxLength="30"/>
-                    <input className="input" id="createPassword" type="text" placeholder="Enter Password" maxLength="30"/>
+                    <input className="input" id="createName" type="text" placeholder="Enter Name" maxLength="30" ref={(el) => createName.current = el}/>
+                    <input className="input" id="createEmail" type="text" placeholder="Enter Email" maxLength="30" ref={(el) => createEmail.current = el}/>
+                    <input className="input" id="createPassword" type="text" placeholder="Enter Password" ref={(el) => createPass.current = el}/>
                 </div>
 
                 <div className="popup-buttons">
-                    <button className="enter"onClick={() => {alert("Account Created!"); setShowCreateAccountPopup(false)}}>Submit</button>
+                    <button className="enter"onClick={() => {submitAccount(); setShowCreateAccountPopup(false); }}>Submit</button>
                     <button className="cancel" onClick={() => setShowCreateAccountPopup(false)}> Cancel </button>
                 </div>
             </div>

@@ -4,21 +4,28 @@ const argon2 = require('argon2')
 var jwt = require('jsonwebtoken')
 var passport = require('passport')
 var LocalStrategy = require('passport-local')
+const nodemailer = require('nodemailer');
 const {db} = require('./connection.js')
 const router = express.Router()
 router.use(express.json())
 
 dotenv.config({ path: './data/config.env' })
 var secret = process.env.JWT_SECRET
-
+const emailSecret = process.env.EMAIL_SECRET;
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com.',
+    auth: {
+        user: emailUser,
+        pass: emailPass,
+    },
+});
 
 module.exports = (db) => {
     router.post('/user', async (req, res) => {
     
         try{
-    
-    
-            
             const hash = await argon2.hash(req.body.password)
     
         
@@ -26,13 +33,27 @@ module.exports = (db) => {
                 nickname: req.body.nickname,
                 email: req.body.email,
                 password: hash,
-                disabled: req.body.disabled
+                disabled: req.body.disabled,
+                verified: false
     
             }
     
             let collection = await db.collection("users")
             let result = await collection.insertOne(newAccount)
-            res.send(result).status(204)
+
+            const token = jwt.sign({ email: req.body.email }, emailSecret, { expiresIn: '1h' });
+
+            const verificationLink = `http://localhost:3000/auth/verify-email/${token}`;
+            const mailOptions = {
+                from: emailUser,
+                to: req.body.email,
+                subject: 'Verify Your Email',
+                html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`,
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            res.status(201).send({ message: 'Account created. Please verify your email.' })
         }
         catch (err){
             console.error("An error occurred:", err);
@@ -48,6 +69,10 @@ module.exports = (db) => {
               if (!user) {
                 return res.status(401).json({ error: info.message })
               }
+
+              if (!user.verified) {
+                return res.status(403).json({ error: 'Email not verified.' });
+              }
               // For JWT-based approach, sign a token here
               
               var token = jwt.sign(
@@ -61,6 +86,27 @@ module.exports = (db) => {
         })(req, res, next)
     })
 
+    router.get('/verify-email/:token', async (req, res) => {
+        try {
+            const { token } = req.params;
+            const decoded = jwt.verify(token, emailSecret);
+
+            const collection = await db.collection('users');
+            const result = await collection.updateOne(
+                { email: decoded.email },
+                { $set: { verified: true } }
+            )
+
+            if (result.modifiedCount === 0) {
+                return res.status(400).send({ message: 'Invalid or expired token.' });
+            }
+
+            res.status(200).send({ message: 'Email verified successfully.' });
+        } catch (err) {
+            console.error('Email verification error:', err);
+            res.status(400).send({ message: 'Invalid or expired token.' });
+        }
+    })
     passport.use(new LocalStrategy(
         {
             usernameField: 'email',

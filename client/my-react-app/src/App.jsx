@@ -89,6 +89,84 @@ function App() {
     if (currentPage * destsPerPage < destinations.length )
     setCurrentPage(currentPage + 1)
   }
+
+  const [selected, setSelected] = useState(false); // Tracks the currently selected button
+  const [list, setList] = useState({
+    listName: "",
+    destIDs: [],
+    desc:"",
+    visibility: false
+  })
+
+  const listName = useRef("")
+  const listDests = useRef([])
+  const listDesc = useRef("")
+  const handleToggle = () => {
+    setSelected((prevSelected) => {
+      const newSelected = !prevSelected; 
+      setList((prevList) => ({
+        ...prevList,
+        visibility: newSelected, 
+      }));
+      return newSelected;
+    });
+  }
+
+  
+  const createList = async () => {
+    const listInfo = {...list}
+    console.log(list.listName)
+    if (listInfo.listName !== "") {
+      try{
+
+
+        console.log("CREATE LIST FUNCTION called ")
+        const token = localStorage.getItem("jwtToken");
+        console.log("The stupid fucking token is ", token)
+        let response
+        response = await fetch('/api/secure/destinations/lists', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+                },
+            body: JSON.stringify(listInfo)
+        })
+
+        console.log("Payload:", JSON.stringify(listInfo));
+        console.log("Response status:", response.status);
+        console.log("Response headers:", [...response.headers]);
+
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const confirmation = await response.json()
+        console.log("Confirmation:", confirmation)
+
+    }
+    catch (error) {
+        console.error('A problem occurred when add the list: ', error);
+    }
+    }
+  }
+
+  useEffect( () => {
+    console.log("useeffect for creating lists called")
+    createList()
+  }, [list])
+
+  const populateList = () => {
+    
+    setList(prev => ({
+      ...prev,
+      listName: listName.current.value || '', 
+      destIDs: listDests.current.value || [],
+      desc: listDesc.current.value || '',
+      visibility: selected
+    })) 
+  }
   return (
 
     <Router>
@@ -148,30 +226,47 @@ function App() {
                 </div>
               
                 {isLoggedIn && (
-                  <div className="favorites-section">
-                    <h2>My Travel Lists</h2>
-                    <div className="list-controls">
-                      <input id="list-name" type="text" placeholder="Enter list name..." />
-                      <input id="destinations" type="text" placeholder="Enter destinations separated by commas" />
-                      <button id="create-list">Create List</button>
+                  <>
+                    <div className="favorites-section">
+                      <h2>My Travel Lists</h2>
+                      <div className="list-controls">
+                        <div className="list-inputs">
+                          <input ref={(el) => (listName.current = el)} type="text" placeholder="Enter list name..." />
+                          <input type="text" placeholder="Enter destinations separated by commas" />
+                          <textarea ref={(el) => (listDesc.current = el)} placeholder="Enter description"></textarea>
+                        </div>
+                        <div className="list-actions">
+                          <label htmlFor="radio" className="radio-label">
+                            <input id="radio" type="radio" name="visibility" className="radio-input" onChange={handleToggle} checked={selected} />
+                            Publicly Visible
+                          </label>
+                          <button onClick={() => populateList()}>Create List</button>
+                        </div>
+                      </div>
+                      <div className="list-container">
+                        <ul id="custom-lists"></ul>
+                      </div>
+                      <div className="list-actions">
+                        <button id="load-list">Load List</button>
+                        <button id="delete-list">Delete List</button>
+                        <input id="searchCustom" type="text" placeholder="Search" />
+                        <select id="sort-option">
+                          <option></option>
+                          <option value="Destination">Name</option>
+                          <option value="Region">Region</option>
+                          <option value="Country">Country</option>
+                        </select>
+                        <button id="sort-customLists">Sort</button>
+                        <button id="get-countries">Get Countries</button>
+                      </div>
                     </div>
-                    <div className="list-container">
-                      <ul id="custom-lists"></ul>
+
+                    <div className="user-list-container">
+                      <h3>Public Lists</h3>
+                      <button className="list-button">Summer List</button>
                     </div>
-                    <div className="list-actions">
-                      <button id="load-list">Load List</button>
-                      <button id="delete-list">Delete List</button>
-                      <input id="searchCustom" type="text" placeholder="Search" />
-                      <select id="sort-option">
-                        <option></option>
-                        <option value="Destination">Name</option>
-                        <option value="Region">Region</option>
-                        <option value="Country">Country</option>
-                      </select>
-                      <button id="sort-customLists">Sort</button>
-                      <button id="get-countries">Get Countries</button>
-                    </div>
-                  </div>
+
+                  </>
                 )}
               </div>
         </>}/>

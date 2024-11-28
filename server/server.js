@@ -186,7 +186,7 @@ const postList = async (req, res) => {
             destIDs: req.body.destIDs,
             desc: req.body.desc,
             visibility: req.body.visibility,
-            date: req.body.date
+            // date: req.body.date
         }
 
         let collection = await db.collection("custom_lists")

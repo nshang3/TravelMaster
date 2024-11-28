@@ -29,6 +29,7 @@ function Destinations ( {allDestinations, currentPage, destPerPage}) {
         {currentDests.map( (dest, index) => (
             <div key={index} className="destination" id={`tbl${index}`}>
                 <ul className="countryTbl">
+                    <button>Add to list</button>
                     {Object.values(dest).map((value, index) => (
                         <li className="tblRow" key={index}>
                             <div className="tblCol">{titles[index]}</div>
