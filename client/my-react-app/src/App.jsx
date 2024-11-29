@@ -8,19 +8,7 @@ import Destinations from "./components/Destinations"
 import Markers from "./components/Markers"
 import List from "./components/List"
 import "./stylesheets/App.css"
-function Nav() {
-  const navigate = useNavigate(); // Initialize navigation
 
-  const handleLoginClick = () => {
-    navigate("/login"); // Redirect to the login route
-  }
-
-  return (
-    <div className="logbtn">
-      <button onClick={handleLoginClick}>Log In</button>
-    </div>
-  )
-}
 
 function App() {
   const [isSearch, setIsSearch] = useState(false)
@@ -115,6 +103,13 @@ function App() {
     catch (error) {
         console.error('A problem occurred when add the list: ', error)
     }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken")
+    setLoggedIn(false)
+    setUserKey("")
+    console.log("User has logged out.")
   }
 
   useEffect(() => {
@@ -275,10 +270,10 @@ function App() {
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
     console.log("Token to run getUserLists", token)
-    if (token) {
-      getUserLists();
+    if (isLoggedIn && token) {
+      getUserLists()
     } else {
-      console.log("Token not found, skipping getUserLists call");
+      console.log("Token not found, skipping getUserLists call")
     }
   }, [reloadLists, userKey])
   return (
@@ -289,7 +284,7 @@ function App() {
         <Route path="/" element={
           <>
               <Header />
-              <Nav />
+              <Nav isLoggedIn={isLoggedIn} handleLogout={handleLogout}/>
               <div className="container">
                 <div className="search-section">
                   <h2>Search For Destinations</h2>
@@ -407,6 +402,24 @@ function App() {
         </>}/>
       </Routes>
     </Router>
+  )
+}
+
+function Nav({isLoggedIn, handleLogout}) {
+  const navigate = useNavigate() // Initialize navigation
+
+  const handleLoginClick = () => {
+    if (isLoggedIn) {
+      handleLogout()
+    } else {
+      navigate("/login")
+    }
+  }
+
+  return (
+    <div className="logbtn">
+      <button onClick={handleLoginClick}>{isLoggedIn ? "Logout" : "Login"}</button>
+    </div>
   )
 }
 
