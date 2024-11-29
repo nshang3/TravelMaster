@@ -183,7 +183,8 @@ const postList = async (req, res) => {
     try{
         let newDocument = {
             listName: req.body.listName,
-            destIDs: req.body.destIDs,
+            destinationNames: req.body.destinationNames,
+            destinationCountries: req.body.destinationCountries,
             desc: req.body.desc,
             visibility: req.body.visibility,
             // date: req.body.date
@@ -210,7 +211,8 @@ router.route('/secure/destinations/lists')
         authenticate, 
         [
             check('listName').notEmpty().withMessage("List name is required"),
-            check('destIDs').isArray().withMessage("destIDs must be an array"),
+            check('destinationNames').isArray().withMessage("destinationNames must be an array"),
+            check('destinationCountries').isArray().withMessage("destinationCountries must be an array"),
             handleValidationErrors
         ],
         postList

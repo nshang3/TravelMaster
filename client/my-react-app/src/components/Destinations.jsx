@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 
-function Destinations ( {allDestinations, currentPage, destPerPage}) {
+function Destinations ( {allDestinations, currentPage, destPerPage, isAdd, addInfo}) {
     const startOfChunk = (currentPage - 1) * destPerPage
     const endOfChunk = startOfChunk + destPerPage
     const currentDests = allDestinations.slice(startOfChunk, endOfChunk)
@@ -29,7 +29,7 @@ function Destinations ( {allDestinations, currentPage, destPerPage}) {
         {currentDests.map( (dest, index) => (
             <div key={index} className="destination" id={`tbl${index}`}>
                 <ul className="countryTbl">
-                    <button>Add to list</button>
+                    {isAdd && (<button onClick={()=>addInfo(dest.Destination, dest.Country)}>Add to list</button>)}
                     {Object.values(dest).map((value, index) => (
                         <li className="tblRow" key={index}>
                             <div className="tblCol">{titles[index]}</div>

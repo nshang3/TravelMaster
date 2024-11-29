@@ -6,6 +6,7 @@ import Header from "./components/Header"
 import LoginPage from "./components/LoginPage"
 import Destinations from "./components/Destinations"
 import Markers from "./components/Markers"
+import List from "./components/List"
 import "./stylesheets/App.css"
 function Nav() {
   const navigate = useNavigate(); // Initialize navigation
@@ -90,37 +91,50 @@ function App() {
     setCurrentPage(currentPage + 1)
   }
 
+
+
+
+
+
+
+
   const [selected, setSelected] = useState(false); // Tracks the currently selected button
   const [list, setList] = useState({
     listName: "",
-    destIDs: [],
+    destinationNames: [],
+    destinationCountries: [],
     desc:"",
     visibility: false
   })
+  const [isAddToList, setIsAddToList] = useState(false)
+  const [userLists, displayUserLists] = useState([])
+  const [userDests, setUserDests] = useState([])
+  const [userCountries, setUserCountries] = useState([])
+  const [reloadLists, setReloadLists] = useState(false)
+  const listName = useRef('')
+  const listDesc = useRef('')
 
-  const listName = useRef("")
-  const listDests = useRef([])
-  const listDesc = useRef("")
   const handleToggle = () => {
     setSelected((prevSelected) => {
       const newSelected = !prevSelected; 
       setList((prevList) => ({
         ...prevList,
         visibility: newSelected, 
-      }));
-      return newSelected;
-    });
+      }))
+      return newSelected
+    })
   }
 
   
   const createList = async () => {
     const listInfo = {...list}
-    console.log(list.listName)
+    //console.log(list.listName)
+    
     if (listInfo.listName !== "") {
       try{
 
 
-        console.log("CREATE LIST FUNCTION called ")
+        //console.log("CREATE LIST FUNCTION called ")
         const token = localStorage.getItem("jwtToken");
         console.log("The stupid fucking token is ", token)
         let response
@@ -133,9 +147,9 @@ function App() {
             body: JSON.stringify(listInfo)
         })
 
-        console.log("Payload:", JSON.stringify(listInfo));
-        console.log("Response status:", response.status);
-        console.log("Response headers:", [...response.headers]);
+        console.log("Payload:", JSON.stringify(listInfo))
+        console.log("Response status:", response.status)
+        console.log("Response headers:", [...response.headers])
 
 
         if (!response.ok) {
@@ -144,12 +158,16 @@ function App() {
         
         const confirmation = await response.json()
         console.log("Confirmation:", confirmation)
+        
+        setUserDests([])
+        setUserCountries([])
+        setReloadLists((prev) => !prev);
+        }
+        catch (error) {
+            console.error('A problem occurred when add the list: ', error);
+        }
+    }
 
-    }
-    catch (error) {
-        console.error('A problem occurred when add the list: ', error);
-    }
-    }
   }
 
   useEffect( () => {
@@ -158,15 +176,70 @@ function App() {
   }, [list])
 
   const populateList = () => {
-    
+    if (listName.current.value == "") {
+      alert("Dumb fuck cant have empty list name")
+    }
     setList(prev => ({
       ...prev,
       listName: listName.current.value || '', 
-      destIDs: listDests.current.value || [],
+      destinationNames: userDests || [],
+      destinationCountries: userCountries || [],
       desc: listDesc.current.value || '',
       visibility: selected
-    })) 
+    }))
+    
   }
+
+  const toggleAddDestinations = () => {
+    setIsAddToList((prev) => !prev)
+  
+    // if (isAddToList) {
+    //   // console.log("Done adding destinations:");
+    //   // console.log("Destination Names:", destNames);
+    //   // console.log("Destination Countries:", destCountries);
+    // }
+  }
+
+  const addDestinationInfo = (destName, destCountry) => {
+    if (destName && destCountry) {
+      setUserDests((prev) => [...prev, destName])
+      setUserCountries((prev) => [...prev, destCountry])
+    }
+  }
+
+  const getUserLists = async () => {
+
+    try{
+      console.log("This use effect is getting called a billon times ")
+      const token = localStorage.getItem("jwtToken");
+      // console.log("The stupid fucking token is ", token)
+      let response
+      response = await fetch('/api/secure/destinations/lists', {
+        headers: {
+            Authorization: `Bearer ${token}`
+          }
+    
+        })
+
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const confirmation = await response.json()
+      // console.log("Confirmation:", confirmation)
+      
+      displayUserLists(confirmation)
+
+  }
+  catch (error) {
+      console.error('A problem occurred when add the list: ', error)
+  }
+
+  }
+
+  useEffect(() => {
+    getUserLists()
+  }, [reloadLists])
   return (
 
     <Router>
@@ -222,7 +295,7 @@ function App() {
                 </div>
 
                 <div className="grid-container">
-                  <Destinations allDestinations={destinations} currentPage={currentPage} destPerPage={destsPerPage} />
+                  <Destinations allDestinations={destinations} currentPage={currentPage} destPerPage={destsPerPage} isAdd={isAddToList} addInfo={addDestinationInfo}/>
                 </div>
               
                 {isLoggedIn && (
@@ -232,10 +305,10 @@ function App() {
                       <div className="list-controls">
                         <div className="list-inputs">
                           <input ref={(el) => (listName.current = el)} type="text" placeholder="Enter list name..." />
-                          <input type="text" placeholder="Enter destinations separated by commas" />
                           <textarea ref={(el) => (listDesc.current = el)} placeholder="Enter description"></textarea>
                         </div>
                         <div className="list-actions">
+                          <button onClick={toggleAddDestinations}>{isAddToList ? "Stop Adding Destinations" : "Add Destinations"}</button>
                           <label htmlFor="radio" className="radio-label">
                             <input id="radio" type="radio" name="visibility" className="radio-input" onChange={handleToggle} checked={selected} />
                             Publicly Visible
@@ -244,7 +317,8 @@ function App() {
                         </div>
                       </div>
                       <div className="list-container">
-                        <ul id="custom-lists"></ul>
+                        <ul id="custom-lists">
+                        </ul>
                       </div>
                       <div className="list-actions">
                         <button id="load-list">Load List</button>
@@ -261,9 +335,15 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="user-list-container">
-                      <h3>Public Lists</h3>
-                      <button className="list-button">Summer List</button>
+                    <h3>My Lists</h3>
+                    <div className="user-lists-container">
+                    {userLists.map((list) => (
+                          <List
+                            key={list._id}
+                            listName={list.listName}
+                            desc={list.desc}
+                            destinationNames={list.destinationNames}
+                            destinationCountries={list.destinationCountries}/>))}
                     </div>
 
                   </>
