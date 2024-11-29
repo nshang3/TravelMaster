@@ -161,6 +161,28 @@ router.route('/open/destinations')//do for countries a query parameter i.e. ?all
         getDestinations
     )   
 
+
+
+const getPublicLists = async (req, res) => {
+    try {
+        const collection = await db.collection("custom_lists");
+        const query = { visibility: true };
+        const results = await collection.find(query).toArray();
+
+        res.status(200).send(results);
+    } catch (error) {
+        console.error("Error fetching public lists:", error);
+        res.status(500).send({ error: "Failed to fetch public lists" });
+    }
+}
+
+router.route('/open/publiclists')
+    .get(
+        handleValidationErrors,
+        getPublicLists
+    )
+
+
 router.route('/open/destinations/:dest_id')
     .get( 
     [
@@ -172,11 +194,10 @@ router.route('/open/destinations/:dest_id')
     )
 
 
-
-
-const getList = async (req, res) => {
+const getLists = async (req, res) => {
     try {
         const query = { userKey: req.query.userKey };
+        
         const collection = await db.collection("custom_lists");
         const results = await collection.find(query).toArray();
         
@@ -214,7 +235,7 @@ const postList = async (req, res) => {
 router.route('/secure/destinations/lists')
     .get(
         authenticate,
-        getList
+        getLists
         )
     .post(
         authenticate, 

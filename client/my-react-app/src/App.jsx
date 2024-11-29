@@ -32,6 +32,8 @@ function App() {
   const [destsPerPage, setDestsPerPage] = useState(5)
   const [isLoggedIn, setLoggedIn] = useState(false)
   const [userKey, setUserKey] = useState('')
+  const [publicLists, setPublicLists] = useState([])
+  const [reloadPublicLists, setReloadPublicLists] = useState(false)
   useEffect ( () => {
     //console.log("useEffect for fetching ids called ")
     async function getSearchIDs(){
@@ -93,9 +95,35 @@ function App() {
   }
 
 
+  const getPublicLists = async () => {
+    try{
+      console.log("getPublicLists is called ")
 
+      let response
+      response = await fetch('/api/open/publiclists')
 
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const confirmation = await response.json()
+      console.log("Confirmation:", confirmation)
+      
+      setPublicLists(confirmation)
 
+    }
+    catch (error) {
+        console.error('A problem occurred when add the list: ', error)
+    }
+  }
+
+  useEffect(() => {
+    getPublicLists()
+  }, [])
+  
+  useEffect( () => {
+    getPublicLists()
+  },[reloadPublicLists])
 
 
 
@@ -163,7 +191,11 @@ function App() {
         
         setUserDests([])
         setUserCountries([])
-        setReloadLists((prev) => !prev);
+        setReloadLists((prev) => !prev)
+
+        if (listInfo.visibility == true) {
+          setReloadPublicLists((prev) => !prev)
+        }
         }
         catch (error) {
             console.error('A problem occurred when add the list: ', error);
@@ -309,8 +341,18 @@ function App() {
 
                 <h3>Public Lists</h3>
                 <div className="grid-container">
-
+                  {publicLists.map((list) => (
+                    <List
+                      key={list._id}
+                      listName={list.listName}
+                      desc={list.desc}
+                      destinationNames={list.destinationNames}
+                      destinationCountries={list.destinationCountries}/>))}
                 </div>
+                
+                
+                
+                
                 {isLoggedIn && (
                   <>
                     <div className="favorites-section">
