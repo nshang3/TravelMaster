@@ -31,8 +31,9 @@ function App() {
   const searchInputs = useRef(Array(3).fill(null))
   const [destsPerPage, setDestsPerPage] = useState(5)
   const [isLoggedIn, setLoggedIn] = useState(false)
+  const [userKey, setUserKey] = useState('')
   useEffect ( () => {
-    console.log("useEffect for fetching ids called ")
+    //console.log("useEffect for fetching ids called ")
     async function getSearchIDs(){
 
       const dest = searchInputs.current[0]?.value || '';
@@ -59,7 +60,7 @@ function App() {
   },[isSearch])
 
   useEffect ( () => {
-    console.log("useEffect for fetching searches called ")
+    //console.log("useEffect for fetching searches called ")
     async function getDestinations() {
       const destinationResponse = searchIDs.map( (id) =>
         fetch(`/api/open/destinations/${id}`).then( (res) => res.json())
@@ -104,7 +105,8 @@ function App() {
     destinationNames: [],
     destinationCountries: [],
     desc:"",
-    visibility: false
+    visibility: false,
+    userKey: userKey
   })
   const [isAddToList, setIsAddToList] = useState(false)
   const [userLists, displayUserLists] = useState([])
@@ -185,7 +187,8 @@ function App() {
       destinationNames: userDests || [],
       destinationCountries: userCountries || [],
       desc: listDesc.current.value || '',
-      visibility: selected
+      visibility: selected,
+      userKey: userKey
     }))
     
   }
@@ -210,11 +213,11 @@ function App() {
   const getUserLists = async () => {
 
     try{
-      console.log("This use effect is getting called a billon times ")
+      console.log("getUserLists is called ")
       const token = localStorage.getItem("jwtToken");
       // console.log("The stupid fucking token is ", token)
       let response
-      response = await fetch('/api/secure/destinations/lists', {
+      response = await fetch(`/api/secure/destinations/lists/?userKey=${userKey}`, {
         headers: {
             Authorization: `Bearer ${token}`
           }
@@ -238,13 +241,19 @@ function App() {
   }
 
   useEffect(() => {
-    getUserLists()
-  }, [reloadLists])
+    const token = localStorage.getItem("jwtToken");
+    console.log("Token to run getUserLists", token)
+    if (token) {
+      getUserLists();
+    } else {
+      console.log("Token not found, skipping getUserLists call");
+    }
+  }, [reloadLists, userKey])
   return (
 
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} />} />
+        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} />} />
         <Route path="/" element={
           <>
               <Header />
@@ -297,7 +306,11 @@ function App() {
                 <div className="grid-container">
                   <Destinations allDestinations={destinations} currentPage={currentPage} destPerPage={destsPerPage} isAdd={isAddToList} addInfo={addDestinationInfo}/>
                 </div>
-              
+
+                <h3>Public Lists</h3>
+                <div className="grid-container">
+
+                </div>
                 {isLoggedIn && (
                   <>
                     <div className="favorites-section">

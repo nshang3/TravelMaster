@@ -82,7 +82,7 @@ module.exports = (db) => {
               ) 
               
               
-              res.status(200).json({ message: 'Login successful', token })
+              res.status(200).json({ message: 'Login successful', token, userId: user._id })
         })(req, res, next)
     })
 
@@ -106,6 +106,10 @@ module.exports = (db) => {
             console.error('Email verification error:', err);
             res.status(400).send({ message: 'Invalid or expired token.' });
         }
+    })
+
+    router.get('/user', async (req, res) => {
+
     })
     passport.use(new LocalStrategy(
         {

@@ -4,7 +4,7 @@ import Header from "./Header"
 import '../stylesheets/LoginPage.css'
 
 
-function LoginPage({setLoggedIn}) {
+function LoginPage({setLoggedIn, setUserKey}) {
     const [showCreateAccountPopup, setShowCreateAccountPopup] = useState(false)
     const emailInput = useRef("")
     const passInput = useRef("")
@@ -42,6 +42,8 @@ function LoginPage({setLoggedIn}) {
                   console.log("Confirmation:", confirmation)
 
                   localStorage.setItem("jwtToken", confirmation.token);
+                  
+                  setUserKey(confirmation.userId)
                   setLoggedIn(true)
                   navigate('/')
             }

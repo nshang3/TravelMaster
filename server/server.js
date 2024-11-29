@@ -175,10 +175,18 @@ router.route('/open/destinations/:dest_id')
 
 
 const getList = async (req, res) => {
-    let collection = await db.collection("custom_lists")
-    let results = await collection.find({}).toArray()
-    res.send(results).status(200)
+    try {
+        const query = { userKey: req.query.userKey };
+        const collection = await db.collection("custom_lists");
+        const results = await collection.find(query).toArray();
+        
+        res.status(200).send(results)
+    } catch (error) {
+        console.error("Error fetching lists:", error)
+        res.status(500).send({ error: "Failed to fetch lists" });
+    }
 }
+
 const postList = async (req, res) => {
     try{
         let newDocument = {
@@ -187,6 +195,7 @@ const postList = async (req, res) => {
             destinationCountries: req.body.destinationCountries,
             desc: req.body.desc,
             visibility: req.body.visibility,
+            userKey: req.body.userKey
             // date: req.body.date
         }
 
