@@ -216,7 +216,8 @@ const postList = async (req, res) => {
             destinationCountries: req.body.destinationCountries,
             desc: req.body.desc,
             visibility: req.body.visibility,
-            userKey: req.body.userKey
+            userKey: req.body.userKey,
+            userName: req.body.userName
             // date: req.body.date
         }
 

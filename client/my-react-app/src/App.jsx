@@ -20,6 +20,7 @@ function App() {
   const [destsPerPage, setDestsPerPage] = useState(5)
   const [isLoggedIn, setLoggedIn] = useState(false)
   const [userKey, setUserKey] = useState('')
+  const [user_name, setUserName] = useState('')
   const [publicLists, setPublicLists] = useState([])
   const [reloadPublicLists, setReloadPublicLists] = useState(false)
   useEffect ( () => {
@@ -136,7 +137,8 @@ function App() {
     destinationCountries: [],
     desc:"",
     visibility: false,
-    userKey: userKey
+    userKey: userKey,
+    userName: user_name
   })
   const [isAddToList, setIsAddToList] = useState(false)
   const [userLists, displayUserLists] = useState([])
@@ -167,7 +169,7 @@ function App() {
 
 
         //console.log("CREATE LIST FUNCTION called ")
-        const token = localStorage.getItem("jwtToken");
+        const token = localStorage.getItem("jwtToken")
         console.log("The stupid fucking token is ", token)
         let response
         response = await fetch('/api/secure/destinations/lists', {
@@ -222,7 +224,8 @@ function App() {
       destinationCountries: userCountries || [],
       desc: listDesc.current.value || '',
       visibility: selected,
-      userKey: userKey
+      userKey: userKey,
+      userName: user_name
     }))
     
   }
@@ -287,7 +290,7 @@ function App() {
 
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} />} />
+        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} setUserName={setUserName} />} />
         <Route path="/" element={
           <>
               <Header />
@@ -346,10 +349,12 @@ function App() {
                   {publicLists.map((list) => (
                     <List
                       key={list._id}
-                      listName={list.listName}
+                      list_name={list.listName}
                       desc={list.desc}
                       destinationNames={list.destinationNames}
-                      destinationCountries={list.destinationCountries}/>))}
+                      destinationCountries={list.destinationCountries}
+                      userKey={userKey}
+                      username={user_name}/>))}
                 </div>
                 
                 
@@ -397,10 +402,12 @@ function App() {
                     {userLists.map((list) => (
                           <List
                             key={list._id}
-                            listName={list.listName}
+                            list_name={list.listName}
                             desc={list.desc}
                             destinationNames={list.destinationNames}
-                            destinationCountries={list.destinationCountries}/>))}
+                            destinationCountries={list.destinationCountries}
+                            userKey={userKey}
+                            username={user_name}/>))}
                     </div>
 
                   </>

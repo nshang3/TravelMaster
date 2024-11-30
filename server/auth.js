@@ -82,7 +82,7 @@ module.exports = (db) => {
               ) 
               
               
-              res.status(200).json({ message: 'Login successful', token, userId: user._id })
+              res.status(200).json({ message: 'Login successful', token, userId: user._id, name: user.nickname })
         })(req, res, next)
     })
 
