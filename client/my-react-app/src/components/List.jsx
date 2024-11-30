@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import "../stylesheets/App.css";
-
+import Review from "./Review"
 function List({ listName, desc, destinationNames, destinationCountries }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleDropdown = () => {
-    setIsOpen(!isOpen); // Toggle the dropdown
-  };
+    setIsOpen(!isOpen) // Toggle the dropdown
+  }
 
   return (
     <div className="user-list">
@@ -22,6 +22,8 @@ function List({ listName, desc, destinationNames, destinationCountries }) {
             </li>
           ))}
         </ul>
+        <h3>Reviews</h3>
+        <Review />
       </div>
     </div>
   );

@@ -82,6 +82,13 @@ function App() {
     setCurrentPage(currentPage + 1)
   }
 
+  const handleDestPerPage = (event) => {
+    const selectedValue = Number(event.target.value)
+    if (selectedValue) {
+      setDestsPerPage(selectedValue)
+      setCurrentPage(1)
+    }
+  }
 
   const getPublicLists = async () => {
     try{
@@ -311,7 +318,7 @@ function App() {
                   </div>
 
                   <label htmlFor="occur">Destinations/Page</label>
-                  <select id="occur" onChange={(e) => setDestsPerPage(Number(e.target.value))}>
+                  <select id="occur" onChange={(e) => handleDestPerPage(e)}>
                     <option></option>
                     <option value="5">5</option>
                     <option value="10">10</option>

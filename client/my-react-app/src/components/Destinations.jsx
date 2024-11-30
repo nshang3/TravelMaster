@@ -24,23 +24,55 @@ function Destinations ( {allDestinations, currentPage, destPerPage, isAdd, addIn
         "Description",
       ]
 
+      const [openStates, setOpenStates] = useState(Array(currentDests.length).fill(false));
+
+        const toggleDropdown = (index) => {
+        setOpenStates((prev) => {
+        const newStates = [...prev];
+        newStates[index] = !newStates[index];
+        return newStates;
+        })
+        }
     return (
-        <>
-        {currentDests.map( (dest, index) => (
-            <div key={index} className="destination" id={`tbl${index}`}>
+    <>
+        {currentDests.map((dest, destIndex) => (
+            <div key={destIndex} className="destination" id={`tbl${destIndex}`}>
                 <ul className="countryTbl">
-                    {isAdd && (<button onClick={()=>addInfo(dest.Destination, dest.Country)}>Add to list</button>)}
-                    {Object.values(dest).map((value, index) => (
+                {isAdd && (
+                    <button onClick={() => addInfo(dest.Destination, dest.Country)}>
+                    Add to list
+                    </button>
+                )}
+
+                {/* Display "Destination" and "Country" */}
+                <li className="tblRow">
+                    <div className="tblCol">Destination</div>
+                    <div className="desc">{dest.Destination}</div>
+                </li>
+                <li className="tblRow">
+                    <div className="tblCol">Country</div>
+                    <div className="desc">{dest.Country}</div>
+                </li>
+
+                {/* Toggle details */}
+                <button onClick={() => toggleDropdown(destIndex)}>
+                    {openStates[destIndex] ? "Hide Details" : "Show Details"}
+                </button>
+
+                {/* Conditionally render additional rows */}
+                {openStates[destIndex] &&
+                    Object.keys(dest)
+                    .filter((key) => key !== "Destination" && key !== "Country")
+                    .map((key, index) => (
                         <li className="tblRow" key={index}>
-                            <div className="tblCol">{titles[index]}</div>
-                            <div className="desc">{value}</div>
+                        <div className="tblCol">{key}</div>
+                        <div className="desc">{dest[key]}</div>
                         </li>
                     ))}
                 </ul>
             </div>
         ))}
-        </>
-    )
+    </>)
 }
 
 export default Destinations
