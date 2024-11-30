@@ -23,6 +23,10 @@ h1 {
   align-items: center; 
 }
 
+.addReview{
+  background-color: #fcc81c;
+  margin-bottom: 5%;
+}
 .search-section, .favorites-section {
   background-color: #fff;
   padding: 20px;

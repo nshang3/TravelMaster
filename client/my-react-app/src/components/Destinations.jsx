@@ -5,34 +5,19 @@ function Destinations ( {allDestinations, currentPage, destPerPage, isAdd, addIn
     const startOfChunk = (currentPage - 1) * destPerPage
     const endOfChunk = startOfChunk + destPerPage
     const currentDests = allDestinations.slice(startOfChunk, endOfChunk)
-    const titles = [
-        "Destination",
-        "Region",
-        "Country",
-        "Category",
-        "Latitude",
-        "Longitude",
-        "Approximate Annual Tourists",
-        "Currency",
-        "Majority Religion",
-        "Famous Foods",
-        "Language",
-        "Best Time to Visit",
-        "Cost of Living",
-        "Safety",
-        "Cultural Significance",
-        "Description",
-      ]
 
-      const [openStates, setOpenStates] = useState(Array(currentDests.length).fill(false));
 
-        const toggleDropdown = (index) => {
-        setOpenStates((prev) => {
-        const newStates = [...prev];
-        newStates[index] = !newStates[index];
-        return newStates;
-        })
-        }
+    const [openStates, setOpenStates] = useState(Array(currentDests.length).fill(false));
+
+    const toggleDropdown = (index) => {
+    setOpenStates((prev) => {
+    const newStates = [...prev];
+    newStates[index] = !newStates[index];
+    return newStates;
+    })
+    }
+
+    
     return (
     <>
         {currentDests.map((dest, destIndex) => (
