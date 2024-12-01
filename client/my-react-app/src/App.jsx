@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from "react-router-dom"
 import { useState, useEffect, useRef} from 'react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -7,6 +7,9 @@ import LoginPage from "./components/LoginPage"
 import Destinations from "./components/Destinations"
 import Markers from "./components/Markers"
 import List from "./components/List"
+import DMCA from "./components/DMCA"
+import AUP from "./components/AUP"
+import Security from "./components/Security"
 import "./stylesheets/App.css"
 
 
@@ -330,9 +333,17 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} setUserName={setUserName} setIsAdmin={setIsAdmin}/>} />
+        <Route path="/DMCA" element={<DMCA />}/>
+        <Route path="/AUP" element={<AUP />}/>
+        <Route path="/Security" element={<Security/>}/>
         <Route path="/" element={
           <>
               <Header />
+              <ul>
+                <li><Link to="/DMCA">DMCA Policy</Link></li>
+                <li><Link to="/AUP">Acceptable Use Policy</Link></li>
+                <li><Link to="/Security">Security & Privacy Policy</Link></li>
+              </ul>
               <Nav isLoggedIn={isLoggedIn} handleLogout={handleLogout}/>
               {isAdmin && <button className="admin-button" onClick={() => setShowModal(true)}>Admin Panel</button>}
               {showModal && (
@@ -488,7 +499,8 @@ function App() {
                   </>
                 )}
               </div>
-        </>}/>
+        </>}
+        />
       </Routes>
     </Router>
   )
