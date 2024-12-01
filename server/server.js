@@ -273,9 +273,15 @@ const editList = async (req, res) => {
     let collection = await db.collection("custom_lists")
     let query = {listName: req.params.listName}
 
+    console.log('Request body:', req.body)
+
     const fieldsToUpdate = {}
     if (req.body.listName !== undefined) fieldsToUpdate.listName = req.body.listName
-    if (req.body.destIDs !== undefined) fieldsToUpdate.destIDs = req.body.destIDs
+    
+    if (req.body.destinationNames !== undefined) {
+        fieldsToUpdate.destinationNames = req.body.destinationNames;
+    }
+    if (req.body.destinationCountries !== undefined) fieldsToUpdate.destinationCountries = req.body.destinationCountries
     if (req.body.desc !== undefined) fieldsToUpdate.desc = req.body.desc
     if (req.body.visibility !== undefined) fieldsToUpdate.visibility = req.body.visibility
     if (req.body.date !== undefined) fieldsToUpdate.date = req.body.date

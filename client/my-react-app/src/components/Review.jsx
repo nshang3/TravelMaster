@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../stylesheets/App.css";
 function Review ({rating, desc, visibility, username, date}) {
-     console.log(visibility)
+     //console.log(visibility)
     return(
         <div className="review-container">
         <ul>

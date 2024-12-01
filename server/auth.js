@@ -34,7 +34,8 @@ module.exports = (db) => {
                 email: req.body.email,
                 password: hash,
                 disabled: req.body.disabled,
-                verified: false
+                verified: false,
+                isAdmin: false
     
             }
     
@@ -82,7 +83,7 @@ module.exports = (db) => {
               ) 
               
               
-              res.status(200).json({ message: 'Login successful', token, userId: user._id, name: user.nickname })
+              res.status(200).json({ message: 'Login successful', token, userId: user._id, name: user.nickname, isAdmin: user.isAdmin })
         })(req, res, next)
     })
 
@@ -108,7 +109,11 @@ module.exports = (db) => {
         }
     })
 
-    router.get('/user', async (req, res) => {
+    router.get('/users', async (req, res) => {
+
+        const collection = await db.collection("users")
+        const results = await collection.find({}).toArray()
+        res.status(200).send(results)
 
     })
     passport.use(new LocalStrategy(

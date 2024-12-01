@@ -23,6 +23,9 @@ function App() {
   const [user_name, setUserName] = useState('')
   const [publicLists, setPublicLists] = useState([])
   const [reloadPublicLists, setReloadPublicLists] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [users, setUsers] = useState([])
 
   console.log("The user key is", userKey)
   useEffect ( () => {
@@ -120,6 +123,7 @@ function App() {
     setLoggedIn(false)
     setUserKey("")
     setUserName("")
+    setIsAdmin(false)
     console.log("User has logged out. userKey reset to:", userKey)
   }
 
@@ -297,15 +301,70 @@ function App() {
       console.log("Token not found, skipping getUserLists call")
     }
   }, [reloadLists, userKey])
+
+  
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/auth/users')
+ 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const users = await response.json()
+      setUsers(users)
+
+    } catch (error) {
+      console.error("Error fetching users:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (showModal) {
+      fetchUsers()
+    }
+  }, [showModal])
+
   return (
 
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} setUserName={setUserName} />} />
+        <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn} setUserKey={setUserKey} setUserName={setUserName} setIsAdmin={setIsAdmin}/>} />
         <Route path="/" element={
           <>
               <Header />
               <Nav isLoggedIn={isLoggedIn} handleLogout={handleLogout}/>
+              {isAdmin && <button className="admin-button" onClick={() => setShowModal(true)}>Admin Panel</button>}
+              {showModal && (
+                  <div className="modal">
+                    <div className="modal-content">
+                      <button className="close" onClick={() => setShowModal(false)}>&times;</button>
+                      <h2>Users List</h2>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Admin</th>
+                            <th>Change to Admin</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.map((user) => (
+                            <tr key={user._id}>
+                              <td>{user._id}</td>
+                              <td>{user.nickname}</td>
+                              <td>{user.email}</td>
+                              <td>{user.isAdmin.toString()}</td>
+                              <input id="radio" type="radio" name="Change to Admin" className="radio-input"/>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+              )}
               <div className="container">
                 <div className="search-section">
                   <h2>Search For Destinations</h2>
@@ -368,7 +427,9 @@ function App() {
                       username={list.userName}
                       authorKey={list.userKey}
                       date={list.date}
-                      loggedInUserName={user_name}/>))}
+                      loggedInUserName={user_name}
+                      reloadPublicList={setReloadLists}
+                      reloadUserList={setReloadPublicLists}/>))}
                 </div>
                 
                 
@@ -419,7 +480,9 @@ function App() {
                             username={list.userName}
                             authorKey={list.userKey}
                             date={list.date}
-                            loggedInUserName={user_name}/>))}
+                            loggedInUserName={user_name}
+                            reloadPublicList={setReloadLists}
+                            reloadUserList={setReloadPublicLists}/>))}
                     </div>
 
                   </>

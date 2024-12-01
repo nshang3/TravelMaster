@@ -249,7 +249,9 @@ textarea#description {
   align-items: stretch; 
 }
 
-
+.admin-button{
+  margin-top: 2%;
+}
 
 .list-details {
   /* display: none;

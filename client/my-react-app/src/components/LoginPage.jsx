@@ -4,7 +4,7 @@ import Header from "./Header"
 import '../stylesheets/LoginPage.css'
 
 
-function LoginPage({setLoggedIn, setUserKey, setUserName}) {
+function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin}) {
     const [showCreateAccountPopup, setShowCreateAccountPopup] = useState(false)
     const emailInput = useRef("")
     const passInput = useRef("")
@@ -46,6 +46,7 @@ function LoginPage({setLoggedIn, setUserKey, setUserName}) {
                   setUserKey(confirmation.userId)
                   setUserName(confirmation.name)
                   setLoggedIn(true)
+                  setIsAdmin(confirmation.isAdmin)
                   navigate('/')
             }
             catch (error) {
