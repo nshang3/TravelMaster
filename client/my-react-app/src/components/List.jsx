@@ -2,17 +2,26 @@ import React, { useState, useEffect } from "react";
 import "../stylesheets/App.css";
 import "../stylesheets/ReviewPopUp.css"
 import Review from "./Review"
-function List({ list_name, desc, destinationNames, destinationCountries, userKey, username }) {
+function List({ list_name, desc, destinationNames, destinationCountries, userKey, username, date, loggedInUserName }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isReviewPopupOpen, setIsReviewPopupOpen] = useState(false)
   const [listRating, setRating] = useState("")
   const [comment, setComment] = useState("")
+  const [displayReviews, setDisplayReviews] = useState([])
   const [review, setReview] = useState({
     listName: "",
     rating: 0,
     reviewDesc: "",
-    visibility: true
+    visibility: true,
+    username: "",
+    date: ""
   })
+  const [reloadReviews, setReloadReviews] = useState(false)
+
+  // useEffect(() => {
+  //   console.log("Received userKey in List:", userKey)
+  // }, [userKey])
+  console.log(loggedInUserName)
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen)
@@ -26,11 +35,17 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
     if (listRating && comment) {
       console.log("Saved Review:", { listRating, comment, list_name })
       
+      const currentEasternTime = new Date().toLocaleString("en-US", {
+        timeZone: "America/New_York",
+      })
+
       setReview(prev => ({...prev,
         listName: list_name,
         rating: listRating,
         reviewDesc: comment,
-        visibility: true
+        visibility: true,
+        username: loggedInUserName,
+        date: currentEasternTime
       }) )
       
       setRating("")
@@ -64,7 +79,7 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
       console.log("Payload:", JSON.stringify(reviewInfo))
       console.log("Response status:", response.status)
       console.log("Response headers:", [...response.headers])
-      
+      setReloadReviews(true)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -81,6 +96,50 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
     setRating("")
     setComment("")
   }
+
+  const getReviews = async () => {
+
+    
+    try{
+      //console.log("getReviews is called ")
+      // const token = localStorage.getItem("jwtToken");
+      // console.log("The stupid fucking token is ", token)
+      let response
+      response = await fetch(`/api/open/destinations/lists/${list_name}/reviews`)
+
+
+      if (response.status === 404) {
+        console.log(`No reviews found for the list: ${list_name}`);
+        setDisplayReviews([])
+        return;
+      }
+  
+      if (!response.ok) {
+        // Handle other errors
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const confirmation = await response.json()
+      // console.log("Confirmation:", confirmation)
+      
+      setDisplayReviews(confirmation)
+
+  }
+  catch (error) {
+      console.error('A problem occurred when add the list: ', error)
+  }
+
+  }
+
+
+  useEffect( () => {
+    getReviews()
+  },[])
+
+  useEffect( () => {
+    getReviews()
+  },[reloadReviews])
+
+
   return (
     <>
       <div className="user-list">
@@ -89,6 +148,8 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
         </div>
         <div className={`list-details ${isOpen ? "open" : ""}`}>
           <p><strong>Description:</strong> {desc}</p>
+          <p><strong>Made by:</strong> {username}</p>
+          <p><strong>Last Updated:</strong>{date}</p>
           <ul>
             {destinationNames.map((name, index) => (
               <li key={index}>
@@ -98,7 +159,15 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
           </ul>
           <h3>Reviews</h3>
           {userKey && <button className="addReview" onClick={toggleReviewPopup}>Add Review</button>}
-          <Review />
+          {displayReviews.map((review) => (
+                    <Review
+                      key={review._id}
+                      rating={review.rating}
+                      desc={review.reviewDesc}
+                      visibility={review.visibility}
+                      username={review.username}
+                      date={review.date}/>
+                      ))}
         </div>
       </div>
 

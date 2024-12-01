@@ -276,7 +276,7 @@ textarea#description {
   padding: 10px; 
   max-height: 500px; 
   opacity: 1; */
-  max-height: 500px; 
+  max-height: 100%; 
   opacity: 1; 
 }
 
@@ -302,4 +302,5 @@ textarea#description {
   padding: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: 4%
 }

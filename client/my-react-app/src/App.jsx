@@ -23,6 +23,8 @@ function App() {
   const [user_name, setUserName] = useState('')
   const [publicLists, setPublicLists] = useState([])
   const [reloadPublicLists, setReloadPublicLists] = useState(false)
+
+  console.log("The user key is", userKey)
   useEffect ( () => {
     //console.log("useEffect for fetching ids called ")
     async function getSearchIDs(){
@@ -117,7 +119,8 @@ function App() {
     localStorage.removeItem("jwtToken")
     setLoggedIn(false)
     setUserKey("")
-    console.log("User has logged out.")
+    setUserName("")
+    console.log("User has logged out. userKey reset to:", userKey)
   }
 
   useEffect(() => {
@@ -138,7 +141,8 @@ function App() {
     desc:"",
     visibility: false,
     userKey: userKey,
-    userName: user_name
+    userName: user_name,
+    date: ""
   })
   const [isAddToList, setIsAddToList] = useState(false)
   const [userLists, displayUserLists] = useState([])
@@ -185,7 +189,9 @@ function App() {
         console.log("Response status:", response.status)
         console.log("Response headers:", [...response.headers])
 
-
+        // const easternTime = new Date(response.headers.get("date")).toLocaleString("en-US", {
+        //   timeZone: "America/New_York",
+        // })
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -217,6 +223,10 @@ function App() {
     if (listName.current.value == "") {
       alert("Dumb fuck cant have empty list name")
     }
+
+    const currentEasternTime = new Date().toLocaleString("en-US", {
+      timeZone: "America/New_York",
+    })
     setList(prev => ({
       ...prev,
       listName: listName.current.value || '', 
@@ -225,7 +235,8 @@ function App() {
       desc: listDesc.current.value || '',
       visibility: selected,
       userKey: userKey,
-      userName: user_name
+      userName: user_name,
+      date: currentEasternTime
     }))
     
   }
@@ -353,8 +364,10 @@ function App() {
                       desc={list.desc}
                       destinationNames={list.destinationNames}
                       destinationCountries={list.destinationCountries}
-                      userKey={userKey}
-                      username={user_name}/>))}
+                      userKey={isLoggedIn ? userKey : undefined}
+                      username={list.userName}
+                      date={list.date}
+                      loggedInUserName={user_name}/>))}
                 </div>
                 
                 
@@ -406,8 +419,10 @@ function App() {
                             desc={list.desc}
                             destinationNames={list.destinationNames}
                             destinationCountries={list.destinationCountries}
-                            userKey={userKey}
-                            username={user_name}/>))}
+                            userKey={isLoggedIn ? userKey : undefined}
+                            username={list.userName}
+                            date={list.date}
+                            loggedInUserName={user_name}/>))}
                     </div>
 
                   </>

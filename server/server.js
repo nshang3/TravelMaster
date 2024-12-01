@@ -217,8 +217,8 @@ const postList = async (req, res) => {
             desc: req.body.desc,
             visibility: req.body.visibility,
             userKey: req.body.userKey,
-            userName: req.body.userName
-            // date: req.body.date
+            userName: req.body.userName,
+            date: req.body.date
         }
 
         let collection = await db.collection("custom_lists")
@@ -257,7 +257,7 @@ const getListFromName = async (req, res) => {
     let result = await collection.findOne(query)
 
     if (!result) {
-        return res.status(404).json({ error: `Destination ${req.params.listName} was not found` })
+        return res.status(404).json({ error: `List ${req.params.listName} was not found` })
     }
 
     if (req.query.ids){
@@ -347,7 +347,7 @@ const getReviewsFromName = async (req, res) => {
     let result = await collection.find(query).toArray()
 
     if (result.length==0) {
-        return res.status(404).json({ error: `Destination ${req.params.listName} and its reviews not found` })
+        return res.status(404).json({ error: `List ${req.params.listName} and its reviews not found` })
     }
     else{
         res.send(result)
@@ -361,6 +361,8 @@ const postReviewFromName = async (req, res) => {
             rating: req.body.rating,
             reviewDesc: req.body.reviewDesc,
             visibility: req.body.visibility,
+            username: req.body.username,
+            date: req.body.date
         }
 
         let collection = await db.collection("reviews")
@@ -391,14 +393,14 @@ const deleteReview = async (req, res) => {
 }
 
 router.route('/secure/destinations/lists/:listName/reviews')
-    .get(
-        authenticate,
-        [
-            param('listName').isString().trim().withMessage("Provide a proper name"),
-            handleValidationErrors
-        ],
-        getReviewsFromName
-    )
+    // .get(
+    //     authenticate,
+    //     [
+    //         param('listName').isString().trim().withMessage("Provide a proper name"),
+    //         handleValidationErrors
+    //     ],
+    //     getReviewsFromName
+    // )
     .post(
         authenticate,
         param('listName').isString().trim().withMessage("Provide a proper name"),
@@ -409,4 +411,11 @@ router.route('/secure/destinations/lists/:listName/reviews')
         deleteReview
     )
 
-
+router.route('/open/destinations/lists/:listName/reviews')
+    .get(
+        [
+            param('listName').isString().trim().withMessage("Provide a proper name"),
+            handleValidationErrors
+        ],
+        getReviewsFromName
+    )
