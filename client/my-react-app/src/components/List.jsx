@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../stylesheets/App.css";
 import "../stylesheets/ReviewPopUp.css"
 import Review from "./Review"
-function List({ list_name, desc, destinationNames, destinationCountries, userKey, username, date, loggedInUserName }) {
+function List({ list_name, desc, destinationNames, destinationCountries, userKey, username, authorKey, date, loggedInUserName }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isReviewPopupOpen, setIsReviewPopupOpen] = useState(false)
   const [listRating, setRating] = useState("")
@@ -18,10 +18,57 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
   })
   const [reloadReviews, setReloadReviews] = useState(false)
 
-  // useEffect(() => {
-  //   console.log("Received userKey in List:", userKey)
-  // }, [userKey])
-  console.log(loggedInUserName)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editListName, setEditListName] = useState(list_name)
+  const [editDescription, setEditDescription] = useState(desc)
+  const [destinations, setDestinations] = useState(destinationNames.map((name, index) => ({ name, country: destinationCountries[index] })))
+
+  console.log("the logged in user is", userKey)
+  console.log("the author of the list is", authorKey)
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  }
+  const handleAddDestination = () => {
+    setDestinations([...destinations, { name: "", country: "" }])
+  }
+  const handleRemoveDestination = (index) => {
+    const newDestinations = destinations.filter((_, i) => i !== index)
+    setDestinations(newDestinations)
+  }
+  const handleDestinationChange = (index, field, value) => {
+    const updatedDestinations = [...destinations]
+    updatedDestinations[index][field] = value
+    setDestinations(updatedDestinations)
+  }
+  const handleSaveEdit = async () => {
+    const updatedList = {
+      listName: editListName,
+      desc: editDescription,
+      destinations: destinations.map((dest) => `${dest.name} - ${dest.country}`), // Send formatted destination list
+    }
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`/api/secure/destinations/lists/${list_name}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedList),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      console.log("List updated successfully!")
+      setIsEditing(false) // Exit edit mode after save
+    } catch (error) {
+      console.error("An error occurred while saving the list: ", error)
+    }
+  }
+
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen)
@@ -98,8 +145,6 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
   }
 
   const getReviews = async () => {
-
-    
     try{
       //console.log("getReviews is called ")
       // const token = localStorage.getItem("jwtToken");
@@ -141,37 +186,153 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
 
 
   return (
+    // <>
+    //   <div className="user-list">
+    //     <div className="list-header" onClick={toggleDropdown}>
+    //       <h4>{list_name}</h4>
+    //       {userKey === authorKey && (<button className="addReview">Edit List</button>)}
+    //     </div>
+        
+    //     <div className={`list-details ${isOpen ? "open" : ""}`}>
+          
+    //       <p><strong>Description:</strong> {desc}</p>
+    //       <p><strong>Made by:</strong> {username}</p>
+    //       <p><strong>Last Updated:</strong>{date}</p>
+    //       <ul>
+    //         {destinationNames.map((name, index) => (
+    //           <li key={index}>
+    //             <span>{name}</span> - <span>{destinationCountries[index]}</span>
+    //           </li>
+    //         ))}
+    //       </ul>
+    //       <h3>Reviews</h3>
+    //       {userKey && <button className="addReview" onClick={toggleReviewPopup}>Add Review</button>}
+    //       {displayReviews.map((review) => (
+    //                 <Review
+    //                   key={review._id}
+    //                   rating={review.rating}
+    //                   desc={review.reviewDesc}
+    //                   visibility={review.visibility}
+    //                   username={review.username}
+    //                   date={review.date}/>
+    //       ))}
+    //     </div>
+    //   </div>
+
+    // {isReviewPopupOpen && (
+    //   <div className="overlay">
+    //     <div className="review-popup">
+    //       <h4>Add a Review</h4>
+    //       <div className="popup-field">
+    //         <label>Rating:</label>
+    //         <input
+    //           type="number"
+    //           min="1"
+    //           max="5"
+    //           value={listRating}
+    //           onChange={(e) => setRating(e.target.value)}
+    //         />
+    //       </div>
+    //       <div className="popup-field">
+    //         <label>Comment:</label>
+    //         <textarea
+    //           value={comment}
+    //           onChange={(e) => setComment(e.target.value)}
+    //         ></textarea>
+    //       </div>
+    //       <div className="popup-buttons">
+    //         <button onClick={handleSaveReview}>Save</button>
+    //         <button onClick={closeReviewPopup}>Cancel</button>
+    //       </div>
+    //     </div>
+    //   </div>
+    // )}
+    // </>
+
+
     <>
-      <div className="user-list">
-        <div className="list-header" onClick={toggleDropdown}>
-          <h4>{list_name}</h4>
-        </div>
-        <div className={`list-details ${isOpen ? "open" : ""}`}>
-          <p><strong>Description:</strong> {desc}</p>
-          <p><strong>Made by:</strong> {username}</p>
-          <p><strong>Last Updated:</strong>{date}</p>
-          <ul>
-            {destinationNames.map((name, index) => (
-              <li key={index}>
-                <span>{name}</span> - <span>{destinationCountries[index]}</span>
-              </li>
-            ))}
-          </ul>
-          <h3>Reviews</h3>
-          {userKey && <button className="addReview" onClick={toggleReviewPopup}>Add Review</button>}
-          {displayReviews.map((review) => (
-                    <Review
-                      key={review._id}
-                      rating={review.rating}
-                      desc={review.reviewDesc}
-                      visibility={review.visibility}
-                      username={review.username}
-                      date={review.date}/>
-                      ))}
-        </div>
+    <div className="user-list">
+      <div className="list-header" onClick={toggleDropdown}>
+        <h4>{list_name}</h4>
+        {userKey === authorKey && (
+          <button className="addReview" onClick={toggleEdit}>
+            {isEditing ? "Cancel Edit" : "Edit List"}
+          </button>
+        )}
       </div>
 
-      {isReviewPopupOpen && (
+      <div className={`list-details ${isOpen ? "open" : ""}`}>
+        {isEditing ? (
+          <div>
+            <div className="edit-field">
+              <label>List Name:</label>
+              <input
+                type="text"
+                value={editListName}
+                onChange={(e) => setEditListName(e.target.value)}
+              />
+            </div>
+            <div className="edit-field">
+              <label>Description:</label>
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </div>
+            <div className="edit-destinations">
+              <h4>Destinations</h4>
+              {destinations.map((dest, index) => (
+                <div key={index} className="destination-item">
+                  <input
+                    type="text"
+                    placeholder="Destination Name"
+                    value={dest.name}
+                    onChange={(e) => handleDestinationChange(index, "name", e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Country"
+                    value={dest.country}
+                    onChange={(e) => handleDestinationChange(index, "country", e.target.value)}
+                  />
+                  <button onClick={() => handleRemoveDestination(index)}>Remove</button>
+                </div>
+              ))}
+              <button onClick={handleAddDestination}>Add Destination</button>
+            </div>
+            <button className="save-edit" onClick={handleSaveEdit}>Save Changes</button>
+          </div>
+        ) : (
+          <>
+            <p><strong>Description:</strong> {desc}</p>
+            <p><strong>Made by:</strong> {username}</p>
+            <p><strong>Last Updated:</strong>{date}</p>
+            <ul>
+              {destinationNames.map((name, index) => (
+                <li key={index}>
+                  <span>{name}</span> - <span>{destinationCountries[index]}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        <h3>Reviews</h3>
+        {userKey && <button className="addReview" onClick={toggleReviewPopup}>Add Review</button>}
+        {displayReviews.map((review) => (
+          <Review
+            key={review._id}
+            rating={review.rating}
+            desc={review.reviewDesc}
+            visibility={review.visibility}
+            username={review.username}
+            date={review.date}
+          />
+        ))}
+      </div>
+    </div>
+
+    {isReviewPopupOpen && (
         <div className="overlay">
           <div className="review-popup">
             <h4>Add a Review</h4>
@@ -199,7 +360,9 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
           </div>
         </div>
       )}
-    </>
+        
+  </>
+
   )
 }
 

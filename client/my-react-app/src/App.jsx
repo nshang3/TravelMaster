@@ -193,7 +193,7 @@ function App() {
         //   timeZone: "America/New_York",
         // })
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`)
         }
         
         const confirmation = await response.json()
@@ -208,7 +208,7 @@ function App() {
         }
         }
         catch (error) {
-            console.error('A problem occurred when add the list: ', error);
+            console.error('A problem occurred when add the list: ', error)
         }
     }
 
@@ -366,6 +366,7 @@ function App() {
                       destinationCountries={list.destinationCountries}
                       userKey={isLoggedIn ? userKey : undefined}
                       username={list.userName}
+                      authorKey={list.userKey}
                       date={list.date}
                       loggedInUserName={user_name}/>))}
                 </div>
@@ -391,12 +392,7 @@ function App() {
                           <button onClick={() => populateList()}>Create List</button>
                         </div>
                       </div>
-                      <div className="list-container">
-                        <ul id="custom-lists">
-                        </ul>
-                      </div>
                       <div className="list-actions">
-                        <button id="load-list">Load List</button>
                         <button id="delete-list">Delete List</button>
                         <input id="searchCustom" type="text" placeholder="Search" />
                         <select id="sort-option">
@@ -421,6 +417,7 @@ function App() {
                             destinationCountries={list.destinationCountries}
                             userKey={isLoggedIn ? userKey : undefined}
                             username={list.userName}
+                            authorKey={list.userKey}
                             date={list.date}
                             loggedInUserName={user_name}/>))}
                     </div>
