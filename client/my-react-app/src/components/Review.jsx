@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../stylesheets/App.css";
-function Review ({rating, desc, visibility, username, date}) {
+function Review ({confirmCode, rating, desc, visibility, username, date}) {
      //console.log(visibility)
     return(
         <div className="review-container">
@@ -16,7 +16,11 @@ function Review ({rating, desc, visibility, username, date}) {
            <li className="tblRow">
                 <div className="tblCol">{username}</div>
                 <div className="desc">{date}</div> 
-           </li>  
+           </li>
+           <li className="tblRow">
+                <div className="tblCol">Confirmation</div>
+                <div className="desc">{confirmCode}</div> 
+           </li>    
         </ul>
     </div>
     )

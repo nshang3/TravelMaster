@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../stylesheets/App.css";
 import "../stylesheets/ReviewPopUp.css"
 import Review from "./Review"
-function List({ list_name, desc, destinationNames, destinationCountries, userKey, username, authorKey, date, loggedInUserName, reloadPublicList, reloadUserList }) {
+function List({ list_name, desc, destinationNames, destinationCountries, userKey, username, authorKey, date, loggedInUserName, reloadPublicList, reloadUserList, adminReloadReviews }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isReviewPopupOpen, setIsReviewPopupOpen] = useState(false)
   const [listRating, setRating] = useState("")
@@ -189,7 +189,7 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
 
   useEffect( () => {
     getReviews()
-  },[reloadReviews])
+  },[reloadReviews, adminReloadReviews])
 
 
   return (
@@ -263,16 +263,19 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
 
         <h3>Reviews</h3>
         {userKey && <button className="addReview" onClick={toggleReviewPopup}>Add Review</button>}
-        {displayReviews.map((review) => (
-          <Review
-            key={review._id}
-            rating={review.rating}
-            desc={review.reviewDesc}
-            visibility={review.visibility}
-            username={review.username}
-            date={review.date}
-          />
-        ))}
+        {displayReviews
+          .filter((review) => review.visibility)
+          .map((review) => (
+            <Review
+              key={review._id}
+              confirmCode={review._id}
+              rating={review.rating}
+              desc={review.reviewDesc}
+              visibility={review.visibility}
+              username={review.username}
+              date={review.date}
+            />
+          ))}
       </div>
     </div>
 

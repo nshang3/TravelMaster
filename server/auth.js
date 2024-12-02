@@ -84,7 +84,7 @@ module.exports = (db) => {
               ) 
               
               
-              res.status(200).json({ message: 'Login successful', token, userId: user._id, name: user.nickname, isAdmin: user.isAdmin })
+              res.status(200).json({ message: 'Login successful', token, userId: user._id, name: user.nickname, isAdmin: user.isAdmin, isDisabled: user.disabled })
         })(req, res, next)
     })
 
@@ -138,31 +138,33 @@ module.exports = (db) => {
         }
     })
 
-    router.put('/user/:id/disable', async (req, res) => {
+    router.put('/user/disable', async (req, res) => {
         try {
-            const userId = req.params.id; 
-            const { disabled } = req.body; 
-            // Validate that "disabled" is a boolean
-            if (typeof disabled !== 'boolean') {
-                return res.status(400).send({ error: "The 'disabled' field must be a boolean value." });
-            }
-    
+            const { userIds, disabled } = req.body;
 
-            const collection = await db.collection("users");
-            const result = await collection.updateOne(
-                { _id: new ObjectId(userId) }, 
-                { $set: { disabled: disabled } } 
-            );
+
+            if (!Array.isArray(userIds) || typeof disabled !== 'boolean') {
+            return res.status(400).send({ error: "'userIds' must be an array and 'disabled' must be a boolean." })
+            }
+
+            // Convert userIds to ObjectId
+            const objectIds = userIds.map((id) => new ObjectId(id))
+
+            const collection = await db.collection('users')
+            const result = await collection.updateMany(
+            { _id: { $in: objectIds } },
+            { $set: { disabled: disabled } }
+            )
     
 
             if (result.matchedCount === 0) {
-                return res.status(404).send({ error: "User not found." });
+                return res.status(404).send({ error: "User not found." })
             }
     
-            res.status(200).send({ message: `User's disabled status updated to ${disabled}.` });
+            res.status(200).send({ message: `User's disabled status updated to ${disabled}.` })
         } catch (err) {
-            console.error("Error updating disabled field:", err);
-            res.status(500).send({ error: "Internal server error." });
+            console.error("Error updating disabled field:", err)
+            res.status(500).send({ error: "Internal server error." })
         }
     })
     router.get('/users', async (req, res) => {

@@ -417,6 +417,39 @@ router.route('/secure/destinations/lists/:listName/reviews')
         deleteReview
     )
 
+const visibleReview = async (req, res) => {
+    try {
+        const { reviewId } = req.params;
+        const { visibility } = req.body;
+    
+        // Validate input
+        if (typeof visibility !== 'boolean') {
+          return res.status(400).send({ error: "'visibility' must be a boolean (true or false)." });
+        }
+    
+        const collection = await db.collection('reviews');
+        const result = await collection.updateOne(
+          { _id: new ObjectId(reviewId) },
+          { $set: { visibility } }
+        );
+    
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ error: "Review not found." });
+        }
+    
+        res.status(200).send({ message: `Review visibility updated to ${visibility}.` });
+      } catch (error) {
+        console.error("Error updating review visibility:", error);
+        res.status(500).send({ error: "Internal server error." });
+      }
+}
+router.route('/secure/reviews/:reviewId/visibility')
+    .put(
+        authenticate,
+        visibleReview
+    )
+
+
 router.route('/open/destinations/lists/:listName/reviews')
     .get(
         [

@@ -4,7 +4,7 @@ import Header from "./Header"
 import '../stylesheets/LoginPage.css'
 
 
-function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin}) {
+function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisabled}) {
     const [showCreateAccountPopup, setShowCreateAccountPopup] = useState(false)
     const emailInput = useRef("")
     const passInput = useRef("")
@@ -40,6 +40,12 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin}) {
                 
                   const confirmation = await response.json()
                   console.log("Confirmation:", confirmation)
+
+                  if (confirmation.isDisabled) {
+                    alert("Your account has been disabled. Please contact support.")
+                    setIsDisabled(true)
+                    return; 
+                  }
 
                   localStorage.setItem("jwtToken", confirmation.token);
                   

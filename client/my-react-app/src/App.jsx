@@ -33,6 +33,9 @@ function App() {
   const [users, setUsers] = useState([])
   const [isDisabled, setIsDisabled] = useState(false)
   const [selectedAdmins, setSelectedAdmins] = useState([]);
+  const [reviewId, setReviewId] = useState('');
+  const [visibility, setVisibility] = useState(true);
+  const [adminReloadReviews, setAdminReloadReviews] = useState(false)
   console.log("The user key is", userKey)
 
   useEffect ( () => {
@@ -364,9 +367,67 @@ function App() {
     }
   }
   
-  const handleDisableUser = (event, userId) => {
+  const handleDisableUser = async (event, userId) => {
+    const user = users.find((user) => user._id === userId)
+    const newDisabledStatus = !user.disabled
 
+  try {
+    const response = await fetch(`/auth/user/disable`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userIds: [userId], disabled: newDisabledStatus }), 
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert(`User disabled status updated to ${newDisabledStatus}`)
+
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u._id === userId ? { ...u, disabled: newDisabledStatus } : u
+        )
+      );
+    } else {
+      console.error(data.error)
+      alert('Failed to update user disabled status.')
+    }
+  } catch (err) {
+    console.error('Error:', err)
   }
+  }
+
+  const handleReviewVisibilityUpdate = async (reviewId, visibility) => {
+    try {
+
+      const token = localStorage.getItem("jwtToken")
+
+      const response = await fetch(`/api/secure/reviews/${reviewId}/visibility`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ visibility }), 
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        alert(`Review visibility updated to: ${visibility ? "Visible" : "Not Visible"}`)
+
+        // reloadPublicLists((prev) => !prev);
+        // reloadLists((prev) => !prev)
+        setAdminReloadReviews(true)
+      } else {
+        alert(`Failed to update review visibility: ${data.error}`)
+      }
+    } catch (error) {
+      console.error("Error updating review visibility:", error)
+      alert("An error occurred while updating review visibility.")
+    }
+  }
+  
   return (
 
     <Router>
@@ -430,28 +491,57 @@ function App() {
                           ))}
                         </tbody>
                       </table>
-                      {/* <button onClick={async () => {
-                        try {
-                          const response = await fetch('/auth/user/admin', {
-                            method: 'PUT',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ userIds: selectedAdmins, isAdmin: true }),
-                          });
 
-                          const data = await response.json();
-                          if (response.ok) {
-                            alert(data.message);
-                            setSelectedAdmins([]); // Clear selected admins
-                          } else {
-                            console.error(data.error);
-                            alert('Failed to update admin status.');
-                          }
-                        } catch (err) {
-                          console.error('Error:', err);
-                        }
-                      }}>Make Selected Admins</button> */}
+                      <div className="adminreview-container">
+                        <h3>Review Visibility</h3>
+                        <label htmlFor="review-id">Review ID:</label>
+                        <input
+                          id="review-id"
+                          type="text"
+                          placeholder="Enter Review ID"
+                          className="review-id-input"
+                          value={reviewId} // Controlled input
+                          onChange={(e) => setReviewId(e.target.value)} // Update state on change
+                        />
+                        <div className="admin-radio-buttons">
+                          <label>
+                            <input
+                              type="radio"
+                              name="visibility"
+                              value={true}
+                              className="radio-input"
+                              checked={visibility === true} // Controlled radio button
+                              onChange={(e) => setVisibility(true)} // Update state to true
+                            />
+                            Visible
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name="visibility"
+                              value={false}
+                              className="radio-input"
+                              checked={visibility === false} // Controlled radio button
+                              onChange={(e) => setVisibility(false)} // Update state to false
+                            />
+                            Not Visible
+                          </label>
+                        </div>
+                        <button
+                          className="submit-button"
+                          onClick={() => {
+                            if (!reviewId) {
+                              alert("Please enter a review ID.");
+                              return;
+                            }
+
+                            // Call the handler function with controlled state
+                            handleReviewVisibilityUpdate(reviewId, visibility);
+                          }}
+                        >
+                          Update Review Visibility
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -520,7 +610,8 @@ function App() {
                       date={list.date}
                       loggedInUserName={user_name}
                       reloadPublicList={setReloadLists}
-                      reloadUserList={setReloadPublicLists}/>))}
+                      reloadUserList={setReloadPublicLists}
+                      adminReloadReviews={adminReloadReviews}/>))}
                 </div>
                 
                 
@@ -573,7 +664,8 @@ function App() {
                             date={list.date}
                             loggedInUserName={user_name}
                             reloadPublicList={setReloadLists}
-                            reloadUserList={setReloadPublicLists}/>))}
+                            reloadUserList={setReloadPublicLists}
+                            adminReloadReviews={adminReloadReviews}/>))}
                     </div>
 
                   </>
