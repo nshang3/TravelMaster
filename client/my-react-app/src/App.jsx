@@ -26,11 +26,15 @@ function App() {
   const [user_name, setUserName] = useState('')
   const [publicLists, setPublicLists] = useState([])
   const [reloadPublicLists, setReloadPublicLists] = useState(false)
+  
+  
   const [isAdmin, setIsAdmin] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [users, setUsers] = useState([])
-
+  const [isDisabled, setIsDisabled] = useState(false)
+  const [selectedAdmins, setSelectedAdmins] = useState([]);
   console.log("The user key is", userKey)
+
   useEffect ( () => {
     //console.log("useEffect for fetching ids called ")
     async function getSearchIDs(){
@@ -329,6 +333,37 @@ function App() {
   }, [showModal])
 
 
+  const handleAdminChange = async (e, userId) => {
+    const user = users.find((user) => user._id === userId)
+    const newIsAdmin = !user.isAdmin
+  
+    try {
+      const response = await fetch(`/auth/user/admin`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userIds: [userId], isAdmin: newIsAdmin }), 
+      })
+  
+      const data = await response.json();
+      if (response.ok) {
+        alert(`User admin status updated to ${newIsAdmin}`)
+
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u._id === userId ? { ...u, isAdmin: newIsAdmin } : u
+          )
+        );
+      } else {
+        console.error(data.error);
+        alert('Failed to update admin status.')
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+  
   const handleDisableUser = (event, userId) => {
 
   }
@@ -362,7 +397,7 @@ function App() {
                             <th>Username</th>
                             <th>Email</th>
                             <th>Admin</th>
-                            <th>Make Admin</th>
+                            <th>Change Admin Status</th>
                             <th>Disable user</th>
                           </tr>
                         </thead>
@@ -379,6 +414,8 @@ function App() {
                                   type="checkbox"
                                   name={"ChangeToAdmin"}
                                   className="checkbox-input"
+                                  checked={selectedAdmins.includes(user._id)}
+                                  onChange={(e) => handleAdminChange(e, user._id)}
                                 />
                               </td>
                               <td>
@@ -393,8 +430,31 @@ function App() {
                           ))}
                         </tbody>
                       </table>
+                      {/* <button onClick={async () => {
+                        try {
+                          const response = await fetch('/auth/user/admin', {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ userIds: selectedAdmins, isAdmin: true }),
+                          });
+
+                          const data = await response.json();
+                          if (response.ok) {
+                            alert(data.message);
+                            setSelectedAdmins([]); // Clear selected admins
+                          } else {
+                            console.error(data.error);
+                            alert('Failed to update admin status.');
+                          }
+                        } catch (err) {
+                          console.error('Error:', err);
+                        }
+                      }}>Make Selected Admins</button> */}
                     </div>
                   </div>
+
               )}
               <div className="container">
                 <div className="search-section">

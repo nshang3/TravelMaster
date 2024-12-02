@@ -110,18 +110,20 @@ module.exports = (db) => {
         }
     })
 
-    router.put('/user/:id/admin', async (req, res) => {
+    router.put('/user/admin', async (req, res) => {
         try {
-            const userId = req.params.id; 
-            const { isAdmin } = req.body; 
+            const { userIds, isAdmin } = req.body; 
     
-            if (typeof isAdmin !== 'boolean') {
-                return res.status(400).send({ error: "isAdmin must be a boolean value." });
+            if (!Array.isArray(userIds) || typeof isAdmin !== 'boolean') {
+                return res.status(400).send({ error: "'userIds' must be an array and 'isAdmin' must be a boolean." });
             }
     
-            const collection = await db.collection("users");
-            const result = await collection.updateOne(
-                { _id: new ObjectId(userId) }, 
+
+            const objectIds = userIds.map((id) => new ObjectId(id));
+    
+            const collection = await db.collection('users');
+            const result = await collection.updateMany(
+                { _id: { $in: objectIds } }, 
                 { $set: { isAdmin: isAdmin } } 
             );
     
