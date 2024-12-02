@@ -34,6 +34,13 @@ function Destinations ( {allDestinations, currentPage, destPerPage, isAdd, addIn
                     <div className="tblCol">Destination</div>
                     <div className="desc">{dest.Destination}</div>
                 </li>
+                <button
+                onClick={() =>
+                  window.open(
+                    `https://duckduckgo.com/?q=${encodeURIComponent(dest.Destination)}`,
+                    "_blank")}>
+                DDG
+                </button>
                 <li className="tblRow">
                     <div className="tblCol">Country</div>
                     <div className="desc">{dest.Country}</div>

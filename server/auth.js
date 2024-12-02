@@ -174,6 +174,45 @@ module.exports = (db) => {
         res.status(200).send(results)
 
     })
+
+    router.put('/user/password', async (req, res) => {
+        try {
+            const { email, oldPassword, newPassword } = req.body;
+        
+            if (!email || !oldPassword || !newPassword) {
+              return res.status(400).send({ error: 'Email, old password, and new password are required.' });
+            }
+        
+            const collection = await db.collection('users');
+            const user = await collection.findOne({ email });
+        
+            if (!user) {
+              return res.status(404).send({ error: 'User not found.' });
+            }
+        
+            // Verify the old password
+            const isMatch = await argon2.verify(user.password, oldPassword);
+            if (!isMatch) {
+              return res.status(401).send({ error: 'Old password is incorrect.' });
+            }
+        
+            // Hash the new password and update it in the database
+            const hashedPassword = await argon2.hash(newPassword);
+            const result = await collection.updateOne(
+              { email },
+              { $set: { password: hashedPassword } }
+            );
+        
+            if (result.modifiedCount === 0) {
+              return res.status(500).send({ error: 'Failed to update password.' });
+            }
+        
+            res.status(200).send({ message: 'Password updated successfully.' });
+          } catch (err) {
+            console.error('Error updating password:', err);
+            res.status(500).send({ error: 'Internal server error.' });
+          }
+      })
     passport.use(new LocalStrategy(
         {
             usernameField: 'email',

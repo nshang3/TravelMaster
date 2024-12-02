@@ -35,7 +35,8 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisab
                 })
     
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    alert(errorData.error || "Login was unsuccessful.");
                   }
                 
                   const confirmation = await response.json()
@@ -56,7 +57,7 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisab
                   navigate('/')
             }
             catch (error) {
-                console.error('A problem occurred when logging in: ', error);
+                alert("Login was unsuccessful. Please try again.");
             }
         }
     }
@@ -67,6 +68,23 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisab
 
 
     const submitLogin = () => {
+        const email = emailInput.current.value.trim();
+        const password = passInput.current.value.trim();
+
+        if (!email) {
+            alert("Please enter an email address.");
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            alert("Please enter a valid email address.");
+            return;
+        }
+
+        if (!password) {
+            alert("Please enter a password.");
+            return;
+        }
 
         setLoginData(prev => ({
             ...prev,
@@ -134,6 +152,47 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisab
             password: createPass.current.value || ''
           }))
     }
+
+    const updatePassword = async (oldPassword, newPassword) => {
+        try {
+            if (!email || !oldPassword || !newPassword) {
+              alert("Email, old password, and new password are required.");
+              return;
+            }
+        
+            const response = await fetch('/auth/user/password', {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, oldPassword, newPassword }),
+            });
+        
+            if (!response.ok) {
+              const errorData = await response.json();
+              alert(errorData.error || "Failed to update password.");
+              return;
+            }
+        
+            alert("Password updated successfully.");
+          } catch (error) {
+            console.error("Error updating password:", error);
+            alert("An error occurred while updating your password. Please try again.");
+          }
+      }
+      
+      const handlePasswordUpdate = () => {
+        const oldPassword = prompt("Enter your old password:");
+        const newPassword = prompt("Enter your new password:");
+        if (oldPassword && newPassword) {
+          updatePassword(oldPassword, newPassword);
+        }
+      }
+
+      const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
     return (
         <>
             <Header />
@@ -146,6 +205,7 @@ function LoginPage({setLoggedIn, setUserKey, setUserName, setIsAdmin, setIsDisab
                         <input className="input" ref={(el) => passInput.current = el} type="text" placeholder="Enter Password" maxLength="30" />
                         <button className="enter" onClick={() => submitLogin()}>Enter</button>
                         <button className="create-account-button" onClick={() => setShowCreateAccountPopup(true)}> Create Account </button>
+                        <button className="enter" onClick={() => handlePasswordUpdate()}>Update Password</button>
                     </div>
                 </div>
             </div>

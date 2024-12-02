@@ -19,14 +19,16 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
   const [reloadReviews, setReloadReviews] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [editListName, setEditListName] = useState(list_name)
   const [editDescription, setEditDescription] = useState(desc)
   const [destinations, setDestinations] = useState(destinationNames.map((name, index) => ({ name, country: destinationCountries[index] })))
   // console.log("the logged in user is", userKey)
   // console.log("the author of the list is", authorKey)
   const toggleEdit = () => {
-    setIsEditing(!isEditing);
+    setIsEditing(!isEditing)
   }
+
   const handleAddDestination = () => {
     setDestinations([...destinations, { name: "", country: "" }])
   }
@@ -76,6 +78,44 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
     }
   }
 
+  const handleDeleteEdit = async () => {
+    if (!window.confirm("Are you sure you want to delete this list? This action cannot be undone.")) {
+      return;
+    }
+  
+    try {
+
+      setIsDeleting(true)
+  
+
+      const token = localStorage.getItem("jwtToken")
+  
+
+      const response = await fetch(`/api/secure/destinations/lists/${list_name}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete the list.");
+      }
+  
+
+      alert("List deleted successfully!")
+      reloadUserList((prev) => !prev)
+      reloadPublicList((prev) => !prev)
+    } catch (error) {
+      console.error("An error occurred while deleting the list:", error)
+      alert("Failed to delete the list. Please try again later.")
+    } finally {
+      // Reset the deleting state
+      setIsDeleting(false)
+    }
+  }
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen)
@@ -201,6 +241,14 @@ function List({ list_name, desc, destinationNames, destinationCountries, userKey
         {userKey === authorKey && (
           <button className="addReview" onClick={toggleEdit}>
             {isEditing ? "Cancel Edit" : "Edit List"}
+          </button>
+        )}
+        {userKey === authorKey && (
+          <button
+              className="addReview"
+              onClick={handleDeleteEdit}
+              disabled={isDeleting} >
+              {isDeleting ? "Deleting..." : "Delete List"}
           </button>
         )}
       </div>

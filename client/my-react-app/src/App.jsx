@@ -26,7 +26,7 @@ function App() {
   const [user_name, setUserName] = useState('')
   const [publicLists, setPublicLists] = useState([])
   const [reloadPublicLists, setReloadPublicLists] = useState(false)
-  
+  const [showAboutPopup, setShowAboutPopup] = useState(false);
   
   const [isAdmin, setIsAdmin] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -439,12 +439,32 @@ function App() {
         <Route path="/" element={
           <>
               <Header />
+
+            <div className="about-container">
+            <button className="about-button" onClick={() => setShowAboutPopup(true)}>About</button>
+
+            {showAboutPopup && (
+              <div className="about-overlay">
+                <div className="about-popup">
+                  <h2>About This App</h2>
+                  <p>
+                  Discover and share your favorite travel destinations with ease! 
+                  This app allows users to create and manage personalized lists of favorite destinations. 
+                  Logged-in users can save, edit, and make their lists public, inviting others to explore and contribute comments or ratings. 
+                  Administrators can efficiently manage user accounts and ensure smooth operations, making it a perfect platform for travel enthusiasts to connect and collaborate.
+                  </p>
+                  <button className="close-button" onClick={() => setShowAboutPopup(false)}>Close</button>
+                </div>
+              </div>
+            )}
+          </div>
               <ul>
                 <li><Link to="/DMCA">DMCA Policy</Link></li>
                 <li><Link to="/AUP">Acceptable Use Policy</Link></li>
                 <li><Link to="/Security">Security & Privacy Policy</Link></li>
               </ul>
               <Nav isLoggedIn={isLoggedIn} handleLogout={handleLogout}/>
+
               {isAdmin && <button className="admin-button" onClick={() => setShowModal(true)}>Admin Panel</button>}
               {showModal && (
                   <div className="modal">
@@ -597,21 +617,28 @@ function App() {
 
                 <h3>Public Lists</h3>
                 <div className="grid-container">
-                  {publicLists.map((list) => (
-                    <List
-                      key={list._id}
-                      list_name={list.listName}
-                      desc={list.desc}
-                      destinationNames={list.destinationNames}
-                      destinationCountries={list.destinationCountries}
-                      userKey={isLoggedIn ? userKey : undefined}
-                      username={list.userName}
-                      authorKey={list.userKey}
-                      date={list.date}
-                      loggedInUserName={user_name}
-                      reloadPublicList={setReloadLists}
-                      reloadUserList={setReloadPublicLists}
-                      adminReloadReviews={adminReloadReviews}/>))}
+                {
+                  publicLists
+                    .sort((a, b) => new Date(b.date) - new Date(a.date)) 
+                    .slice(0, 10)
+                    .map((list) => (
+                      <List
+                        key={list._id}
+                        list_name={list.listName}
+                        desc={list.desc}
+                        destinationNames={list.destinationNames}
+                        destinationCountries={list.destinationCountries}
+                        userKey={isLoggedIn ? userKey : undefined}
+                        username={list.userName}
+                        authorKey={list.userKey}
+                        date={list.date}
+                        loggedInUserName={user_name}
+                        reloadPublicList={setReloadLists}
+                        reloadUserList={setReloadPublicLists}
+                        adminReloadReviews={adminReloadReviews}
+                      />
+                    ))
+                }
                 </div>
                 
                 
