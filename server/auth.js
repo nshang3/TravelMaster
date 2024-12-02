@@ -6,6 +6,7 @@ var passport = require('passport')
 var LocalStrategy = require('passport-local')
 const nodemailer = require('nodemailer');
 const {db} = require('./connection.js')
+const { ObjectId } = require("mongodb")
 const router = express.Router()
 router.use(express.json())
 
@@ -109,6 +110,59 @@ module.exports = (db) => {
         }
     })
 
+    router.put('/user/:id/admin', async (req, res) => {
+        try {
+            const userId = req.params.id; 
+            const { isAdmin } = req.body; 
+    
+            if (typeof isAdmin !== 'boolean') {
+                return res.status(400).send({ error: "isAdmin must be a boolean value." });
+            }
+    
+            const collection = await db.collection("users");
+            const result = await collection.updateOne(
+                { _id: new ObjectId(userId) }, 
+                { $set: { isAdmin: isAdmin } } 
+            );
+    
+            if (result.matchedCount === 0) {
+                return res.status(404).send({ error: "User not found." });
+            }
+    
+            res.status(200).send({ message: "User's admin status updated successfully." });
+        } catch (err) {
+            console.error("Error updating isAdmin field:", err);
+            res.status(500).send({ error: "Internal server error." });
+        }
+    })
+
+    router.put('/user/:id/disable', async (req, res) => {
+        try {
+            const userId = req.params.id; 
+            const { disabled } = req.body; 
+            // Validate that "disabled" is a boolean
+            if (typeof disabled !== 'boolean') {
+                return res.status(400).send({ error: "The 'disabled' field must be a boolean value." });
+            }
+    
+
+            const collection = await db.collection("users");
+            const result = await collection.updateOne(
+                { _id: new ObjectId(userId) }, 
+                { $set: { disabled: disabled } } 
+            );
+    
+
+            if (result.matchedCount === 0) {
+                return res.status(404).send({ error: "User not found." });
+            }
+    
+            res.status(200).send({ message: `User's disabled status updated to ${disabled}.` });
+        } catch (err) {
+            console.error("Error updating disabled field:", err);
+            res.status(500).send({ error: "Internal server error." });
+        }
+    })
     router.get('/users', async (req, res) => {
 
         const collection = await db.collection("users")

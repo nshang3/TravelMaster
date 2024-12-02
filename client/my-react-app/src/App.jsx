@@ -328,6 +328,10 @@ function App() {
     }
   }, [showModal])
 
+
+  const handleDisableUser = (event, userId) => {
+
+  }
   return (
 
     <Router>
@@ -358,7 +362,8 @@ function App() {
                             <th>Username</th>
                             <th>Email</th>
                             <th>Admin</th>
-                            <th>Change to Admin</th>
+                            <th>Make Admin</th>
+                            <th>Disable user</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -368,7 +373,22 @@ function App() {
                               <td>{user.nickname}</td>
                               <td>{user.email}</td>
                               <td>{user.isAdmin.toString()}</td>
-                              <input id="radio" type="radio" name="Change to Admin" className="radio-input"/>
+                              <td>
+                                <input
+                                  id={`check-${user._id}`}
+                                  type="checkbox"
+                                  name={"ChangeToAdmin"}
+                                  className="checkbox-input"
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  id={`disable-${user._id}`}
+                                  type="checkbox"
+                                  className="checkbox-input"
+                                  onChange={(e) => handleDisableUser(e, user._id)}
+                                />
+                              </td>
                             </tr>
                           ))}
                         </tbody>

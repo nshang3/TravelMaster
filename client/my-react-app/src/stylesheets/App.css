@@ -6,6 +6,34 @@ h1 {
   margin: 0;
 }
 
+.modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.modal-content th, 
+.modal-content td {
+  border: 1px solid #ddd; /* Add borders to make the table more structured */
+  padding: 8px; /* Add padding for spacing */
+  text-align: center; /* Center-align the content */
+}
+
+.modal-content th {
+  background-color: #f4f4f4; /* Add background color to the header */
+  font-weight: bold;
+}
+
+.modal-content td input[type="radio"],
+.modal-content td input[type="checkbox"] {
+  margin: 0 auto; /* Center-align radio buttons and checkboxes */
+  display: block; /* Ensure they are properly centered */
+}
+
+.modal-content tr:hover {
+  background-color: #f1f1f1; /* Add hover effect for better UI */
+}
+
 .logbtn{
   margin-top: 2%;
 }
